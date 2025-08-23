@@ -1,0 +1,154 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --breakpoint-2xs: 25rem;
+  --breakpoint-xs: 30rem;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.65rem;
+
+  /* Core */
+  --background: oklch(from var(--ui-primary) calc(0.04 / 0.637 * l) c h);
+  --foreground: var(--ui-foreground);
+
+  --card: oklch(from var(--ui-primary) calc(0.1 / 0.637 * l) c h);
+  --card-foreground: var(--ui-foreground);
+
+  --popover: oklch(from var(--ui-primary) calc(0.1 / 0.637 * l) c h);
+  --popover-foreground: var(--ui-foreground);
+
+  --primary: var(--ui-primary);
+  --primary-foreground: var(--ui-foreground);
+
+  /* Secondary variants */
+  --secondary: oklch(from var(--ui-primary) calc(0.3 / 0.637 * l) c h);
+  --secondary-foreground: var(--ui-foreground);
+
+  --muted: oklch(from var(--ui-primary) calc(0.2 / 0.637 * l) c h);
+  --muted-foreground: oklch(
+    from var(--ui-foreground) calc(0.705 / 0.985 * l) c h
+  );
+
+  --accent: oklch(from var(--ui-primary) calc(0.2 / 0.637 * l) c h);
+  --accent-foreground: var(--ui-foreground);
+
+  --destructive: oklch(from var(--ui-primary) calc(0.704 / 0.637 * l) c h);
+  --border: oklch(from var(--ui-primary) calc(0.2 / 0.637 * l) c h / 50%);
+  --input: oklch(from var(--ui-primary) calc(0.2 / 0.637 * l) c h / 50%);
+  --ring: var(--ui-primary);
+
+  /* Charts */
+  --chart-1: oklch(from var(--ui-primary) calc(0.488 / 0.637 * l) c h);
+  --chart-2: oklch(from var(--ui-primary) calc(0.696 / 0.637 * l) c h);
+  --chart-3: oklch(from var(--ui-primary) calc(0.769 / 0.637 * l) c h);
+  --chart-4: oklch(from var(--ui-primary) calc(0.627 / 0.637 * l) c h);
+  --chart-5: oklch(from var(--ui-primary) calc(0.645 / 0.637 * l) c h);
+
+  /* Sidebar */
+  --sidebar: oklch(from var(--ui-primary) calc(0.21 / 0.637 * l) c h);
+  --sidebar-foreground: var(--ui-foreground);
+
+  --sidebar-primary: var(--ui-primary);
+  --sidebar-primary-foreground: var(--ui-foreground);
+
+  --sidebar-accent: oklch(from var(--ui-primary) calc(0.274 / 0.637 * l) c h);
+  --sidebar-accent-foreground: var(--ui-foreground);
+
+  --sidebar-border: oklch(from var(--ui-primary) l c h / 10%);
+  --sidebar-ring: var(--ui-primary);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Custom text selection colors */
+  ::selection {
+    background-color: oklch(0.55 0.22 15 / 0.3);
+    color: oklch(0.98 0.01 15);
+  }
+
+  ::-moz-selection {
+    background-color: oklch(0.55 0.22 15 / 0.3);
+    color: oklch(0.98 0.01 15);
+  }
+}
+
+/* Dark mode selection colors */
+.dark ::selection {
+  background-color: oklch(0.65 0.25 15 / 0.4);
+  color: oklch(0.9 0.06 15);
+}
+
+.dark ::-moz-selection {
+  background-color: oklch(0.65 0.25 15 / 0.4);
+  color: oklch(0.9 0.06 15);
+}
+
+.table {
+  @apply [&_tr_th]:bg-secondary w-full border-collapse overflow-hidden [&_td]:border [&_td]:border-[#E1E8F5] [&_td]:px-4 [&_td]:py-2 [&_td]:text-start [&_td[align=center]]:text-center [&_td[align=right]]:text-right [&_th]:border [&_th]:border-[#E1E8F5] [&_th]:px-4 [&_th]:py-2 [&_th]:text-start [&_th]:font-bold [&_th[align=center]]:text-center [&_th[align=right]]:text-right [&_tr]:m-0 [&_tr]:border-t [&_tr]:border-[#E1E8F5] [&_tr]:p-0;
+}
+
+@media print {
+  header,
+  footer {
+    display: none;
+  }
+  @page {
+    margin: 0;
+  }
+  body {
+    margin: 1.6cm;
+  }
+}
+
+html:has([data-no-scroll="true"]),
+body:has([data-no-scroll="true"]) {
+  overflow: hidden;
+}

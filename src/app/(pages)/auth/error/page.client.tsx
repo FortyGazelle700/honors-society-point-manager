@@ -1,0 +1,64 @@
+/*
+ * Blue Flame's Honors Society Point Manager
+ * Copyright (C) 2025 Blue Flame
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { auth } from "@/lib/auth";
+import { ArrowRight, RotateCw, Search, ShieldUser } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import {
+  ResponsivePopover,
+  ResponsivePopoverBody,
+  ResponsivePopoverContent,
+  ResponsivePopoverHeader,
+  ResponsivePopoverTitle,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
+import Fuse from "fuse.js";
+import { cn } from "@/lib/utils";
+
+export function OfficerButton() {
+  const router = useRouter();
+  const { data: session } = auth.useSession();
+
+  useEffect(() => {
+    toast.dismiss();
+  }, []);
+
+  return (
+    <Button
+      variant="secondary"
+      onClick={async () => {
+        if (session) {
+          router.push("/portal");
+        } else {
+          await auth.signIn.social({
+            provider: "google",
+            callbackURL: "/portal",
+          });
+        }
+      }}
+    >
+      <RotateCw />
+      <span className="2xs:inline hidden">Try Again</span>
+    </Button>
+  );
+}

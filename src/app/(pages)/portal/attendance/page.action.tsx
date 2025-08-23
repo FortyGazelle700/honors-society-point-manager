@@ -1,0 +1,226 @@
+/*
+ * Blue Flame's Honors Society Point Manager
+ * Copyright (C) 2025 Blue Flame
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+"use server";
+
+import { revalidateTag } from "next/cache";
+import { db } from "@/server/db";
+import { events, eventSubmissions, members } from "@/server/db/schema";
+import {
+  getEvents,
+  getEventSubmissions,
+  getMembers,
+  getSession,
+} from "@/server/api";
+import { and, eq, inArray, not, or } from "drizzle-orm";
+
+export type Members = Awaited<ReturnType<typeof getMembers>>;
+export type Events = Awaited<ReturnType<typeof getEvents>>;
+export type Submissions = Awaited<ReturnType<typeof getEventSubmissions>>;
+
+export async function action(form: FormData) {
+  const session = await getSession();
+  const submissions = await getEventSubmissions();
+  if (!session?.user?.email) {
+    console.error("Not authenticated");
+    return;
+  }
+  const memberList = await getMembers(true);
+  const self = memberList.find((m) => m.email == session.user.email);
+  if (!self || !["owner", "staff", "officer"].includes(self.role ?? "")) {
+    console.error("Not authorized");
+    return;
+  }
+
+  const entryEvents = JSON.parse(String(form.get("events"))) as Events;
+  const entryMembers = JSON.parse(String(form.get("members"))) as Members;
+  let entrySubmissions = JSON.parse(
+    String(form.get("submissions")),
+  ) as Submissions;
+
+  await db.transaction(async (trx) => {
+    const idsInForm = new Set<string>();
+    const addedMembers = new Set<string>();
+    const newSubmissions = new Set<string>();
+
+    for (const data of entryEvents) {
+      if (data.date == null) continue;
+      const id = new Date(data.date ?? new Date()).toISOString().split("T")[0];
+      idsInForm.add(id);
+    }
+
+    for (const data of entryMembers) {
+      const id = `${data.lastName
+        .trim()
+        .toLowerCase()
+        .replaceAll(
+          " ",
+          "_",
+        )}.${data.firstName.trim().toLowerCase().replaceAll(" ", "_")}`;
+      addedMembers.add(id);
+    }
+
+    for (const data of entrySubmissions) {
+      newSubmissions.add(data.id);
+    }
+
+    for (const data of submissions) {
+      if (data.type == "attendance") continue;
+      addedMembers.add(data.memberId);
+    }
+
+    await trx
+      .delete(members)
+      .where(
+        and(
+          eq(members.role, "participant"),
+          not(inArray(members.id, Array.from(addedMembers))),
+        ),
+      );
+
+    await trx
+      .delete(events)
+      .where(
+        and(
+          not(inArray(events.id, Array.from(idsInForm))),
+          eq(events.type, "attendance"),
+        ),
+      );
+
+    await trx
+      .delete(eventSubmissions)
+      .where(
+        and(
+          not(inArray(eventSubmissions.id, Array.from(newSubmissions))),
+          or(eq(eventSubmissions.type, "attendance")),
+          inArray(eventSubmissions.eventId, Array.from(idsInForm)),
+        ),
+      );
+
+    for (const data of entryMembers) {
+      if (data.firstName == "" || data.lastName == "") continue;
+      const id = `${data.lastName
+        .trim()
+        .toLowerCase()
+        .replaceAll(
+          " ",
+          "_",
+        )}.${data.firstName.trim().toLowerCase().replaceAll(" ", "_")}`;
+
+      delete (data as any).updatedAt;
+      delete (data as any).createdAt;
+
+      entrySubmissions = entrySubmissions.map((s) => {
+        if (s.memberId == data.id) {
+          return {
+            ...s,
+            memberId: id,
+          };
+        }
+        return s;
+      });
+
+      delete (data as any).id;
+
+      await trx
+        .insert(members)
+        .values({
+          ...data,
+          id: id,
+          role: "participant",
+          roleName: "Participant",
+          email: "",
+        })
+        .onConflictDoNothing();
+    }
+
+    for (const data of entryEvents) {
+      if (data.id == "" || data.date == null) continue;
+      const id = new Date(data.date ?? new Date()).toISOString().split("T")[0];
+
+      delete (data as any).id;
+      delete (data as any).updatedAt;
+      delete (data as any).createdAt;
+
+      await trx
+        .insert(events)
+        .values({
+          ...data,
+          id: id,
+          name: id,
+          date: data.date ? new Date(data.date) : null,
+          hasQrSubmission: true,
+          needsAdditionalInfo: false,
+          type: "attendance",
+        })
+        .onConflictDoUpdate({
+          target: events.id,
+          set: {
+            ...data,
+            id: id,
+            name: "",
+            date: data.date ? new Date(data.date) : null,
+            type: "attendance",
+            hasQrSubmission: true,
+            needsAdditionalInfo: false,
+            updatedAt: new Date(),
+          },
+        });
+    }
+  });
+
+  await db.transaction(async (trx) => {
+    for (const data of entrySubmissions) {
+      if (data.id == "" || data.id == null) continue;
+
+      delete (data as any).updatedAt;
+      delete (data as any).createdAt;
+
+      await trx
+        .insert(eventSubmissions)
+        .values({
+          ...data,
+          eventDate: data.eventDate ? new Date(data.eventDate) : null,
+          officerNotes: (() => {
+            if (
+              data.status == "approved" &&
+              submissions.find((s) => s.id == data.eventId)?.status !=
+                data.status
+            ) {
+              return `<added by ${self.id}>`;
+            } else {
+              return submissions.find((s) => s.id == data.eventId)
+                ?.officerNotes;
+            }
+          })(),
+        })
+        .onConflictDoUpdate({
+          target: eventSubmissions.id,
+          set: {
+            ...data,
+            eventDate: data.eventDate ? new Date(data.eventDate) : null,
+            updatedAt: new Date(),
+          },
+        });
+    }
+  });
+
+  revalidateTag("db:members");
+  revalidateTag("db:events");
+  revalidateTag("db:events:submissions");
+}

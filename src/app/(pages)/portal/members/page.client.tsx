@@ -59,7 +59,7 @@ import {
   ResponsivePopoverTitle,
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
-import { cn } from "@/lib/utils";
+import { cn, getPointConfig } from "@/lib/utils";
 import {
   Popover,
   PopoverContent,
@@ -196,9 +196,9 @@ export default function MembersClientPage({
                 arr.findIndex(
                   (m) =>
                     m.firstName.trim().toLowerCase() ==
-                      member.firstName.trim().toLowerCase() &&
+                    member.firstName.trim().toLowerCase() &&
                     m.lastName.trim().toLowerCase() ==
-                      member.lastName.trim().toLowerCase(),
+                    member.lastName.trim().toLowerCase(),
                 ) != idx,
             );
           })()}
@@ -217,10 +217,7 @@ export default function MembersClientPage({
               <Popover>
                 <PopoverTrigger className="mr-auto">
                   <div className="flex cursor-pointer items-center gap-2">
-                    {[
-                      { type: "musicianship", icon: Music },
-                      { type: "service", icon: HelpingHand },
-                    ].map(({ type, icon: Icon }) => (
+                    {getPointConfig().map(({ id: type, Icon }) => (
                       <div
                         className={cn(
                           "flex items-center gap-2 rounded-full px-4 py-1",
@@ -251,7 +248,7 @@ export default function MembersClientPage({
                 </PopoverTrigger>
                 <PopoverContent className="w-[40ch]">
                   <div className="flex flex-col gap-2">
-                    {["musicianship", "service"].map((type) => (
+                    {getPointConfig().map(({ id: type }) => (
                       <div className="flex items-center gap-2" key={type}>
                         <PercentageChart
                           percent={
@@ -347,13 +344,13 @@ export default function MembersClientPage({
                       prev.map((o) =>
                         o.id == member.id
                           ? {
-                              ...o,
-                              role:
-                                member.role != "member"
-                                  ? "member"
-                                  : "participant",
-                              roleName: "Member",
-                            }
+                            ...o,
+                            role:
+                              member.role != "member"
+                                ? "member"
+                                : "participant",
+                            roleName: "Member",
+                          }
                           : o,
                       ),
                     );
@@ -381,20 +378,20 @@ export default function MembersClientPage({
                 m.firstName == member.firstName &&
                 m.lastName == member.lastName,
             ).length >= 2 && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex size-9 items-center justify-center rounded-lg bg-yellow-800">
-                    <CircleAlert className="size-4" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  This member already exists in the list.
-                </TooltipContent>
-              </Tooltip>
-            )}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex size-9 items-center justify-center rounded-lg bg-yellow-800">
+                      <CircleAlert className="size-4" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="left">
+                    This member already exists in the list.
+                  </TooltipContent>
+                </Tooltip>
+              )}
             {member.firstName == "" &&
-            member.lastName == "" &&
-            member.email == "" ? (
+              member.lastName == "" &&
+              member.email == "" ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button

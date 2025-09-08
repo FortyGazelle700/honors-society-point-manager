@@ -23,26 +23,6 @@ import { unstable_cache } from "next/cache";
 import { auth } from "@/server/auth";
 import { headers } from "next/headers";
 
-export async function getConfig() {
-  const defaultConfig = {
-    musicianship_points: "0",
-    service_points: "0",
-  };
-  const req = unstable_cache(
-    async () => {
-      return {
-        ...defaultConfig,
-        ...(await db.select().from(config))
-          .map((c) => ({ [c.key]: c.value }))
-          .reduce((acc, curr) => ({ ...acc, ...curr }), {}),
-      };
-    },
-    [],
-    { tags: ["db:config"] },
-  );
-  return (await req()) as unknown as Record<string, string>;
-}
-
 export async function getOfficers(includeStaff = false) {
   const req = unstable_cache(
     async () => {

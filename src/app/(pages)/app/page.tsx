@@ -33,13 +33,12 @@ import {
 } from "lucide-react";
 import { SignOutButton } from "./page.client";
 import {
-  getConfig,
   getEvents,
   getEventSubmissions,
   getMembers,
 } from "@/server/api";
 import { cookies } from "next/headers";
-import { cn } from "@/lib/utils";
+import { cn, getPointConfig } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
@@ -53,9 +52,8 @@ export const metadata: Metadata = {
 
 export default async function AppPage() {
   const cookieList = await cookies();
-  const config = await getConfig();
   const events = (await getEvents()).filter(
-    (e) => e.type == "musicianship" || e.type == "service",
+    (e) => getPointConfig().some((pt) => pt.id == e.type),
   );
   const memberId = cookieList.get("selectedMember")?.value;
   const members = await getMembers();
@@ -93,28 +91,14 @@ export default async function AppPage() {
         </div>
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {[
-          {
-            icon: Music,
-            label: "Musicianship Points",
-            amount: submissions.filter(
-              (s) =>
-                s.type == "musicianship" &&
-                (s.status == "approved" || s.status == "auto-approved"),
-            ).length,
-            min: Number(config["musicianship_points"]),
-          },
-          {
-            icon: HelpingHand,
-            label: "Service Points",
-            amount: submissions.filter(
-              (s) =>
-                s.type == "service" &&
-                (s.status == "approved" || s.status == "auto-approved"),
-            ).length,
-            min: Number(config["service_points"]),
-          },
-        ].map(({ icon: Icon, label, amount, min }) => (
+        {getPointConfig().map((pt) => ({
+          icon: pt.Icon,
+          label: pt.name,
+          amount: submissions.filter(
+            (s) => s.type == pt.id && (s.status == "approved" || s.status == "auto-approved"),
+          ).length,
+          min: Number(getPointConfig().find((c) => c.id == pt.id)?.minimumPoints ?? 0),
+        })).map(({ icon: Icon, label, amount, min }) => (
           <div
             key={label}
             className="bg-secondary/50 relative isolate flex h-auto items-end justify-between gap-2 overflow-clip rounded-xl !px-6 py-6 pt-32"
@@ -208,17 +192,13 @@ export default async function AppPage() {
                   <div
                     className={cn(
                       "flex items-center gap-1.5 rounded-full px-2 py-1 text-xs",
-                      event.type == "service" &&
-                        "border-yellow-600 bg-yellow-800",
-                      event.type == "musicianship" &&
-                        "border-purple-600 bg-purple-800",
+                      `border-${getPointConfig().find((c) => c.id == event.type)?.color}-600 bg-${getPointConfig().find((c) => c.id == event.type)?.color}-800`,
                     )}
                   >
                     <div
                       className={cn(
                         "size-3 rounded-full",
-                        event.type == "service" && "bg-yellow-600",
-                        event.type == "musicianship" && "bg-purple-600",
+                        `bg-${getPointConfig().find((c) => c.id == event.type)?.color}-600`,
                       )}
                     />
                     {toProperCase(event.type)} Point
@@ -313,17 +293,13 @@ export default async function AppPage() {
                   <div
                     className={cn(
                       "flex items-center gap-1.5 rounded-full px-2 py-1 text-xs",
-                      submission.type == "service" &&
-                        "border-blue-600 bg-blue-800",
-                      submission.type == "musicianship" &&
-                        "border-purple-600 bg-purple-800",
+                      `border-${getPointConfig().find((c) => c.id == submission.type)?.color}-600 bg-${getPointConfig().find((c) => c.id == submission.type)?.color}-800`,
                     )}
                   >
                     <div
                       className={cn(
                         "size-3 rounded-full",
-                        submission.type == "service" && "bg-blue-600",
-                        submission.type == "musicianship" && "bg-purple-600",
+                        `bg-${getPointConfig().find((c) => c.id == submission.type)?.color}-600`,
                       )}
                     />
                     {toProperCase(submission.type)} Point
@@ -333,13 +309,13 @@ export default async function AppPage() {
                       "flex items-center gap-1.5 rounded-full px-2 py-1 text-xs",
                       (submission.status == "approved" ||
                         submission.status == "auto-approved") &&
-                        "border-green-600 bg-green-800",
+                      "border-green-600 bg-green-800",
                       submission.status == "rejected" &&
-                        "border-red-600 bg-red-800",
+                      "border-red-600 bg-red-800",
                       submission.status == "pending" &&
-                        "border-yellow-600 bg-yellow-800",
+                      "border-yellow-600 bg-yellow-800",
                       submission.status == "cancelled" &&
-                        "border-gray-600 bg-gray-800",
+                      "border-gray-600 bg-gray-800",
                     )}
                   >
                     <div
@@ -347,7 +323,7 @@ export default async function AppPage() {
                         "size-3 rounded-full",
                         (submission.status == "approved" ||
                           submission.status == "auto-approved") &&
-                          "bg-green-600",
+                        "bg-green-600",
                         submission.status == "rejected" && "bg-red-600",
                         submission.status == "pending" && "bg-yellow-600",
                         submission.status == "cancelled" && "bg-gray-600",

@@ -95,7 +95,7 @@ export function validateEnv(): EnvConfig {
     console.log();
     if (
       error &&
-      typeof error === "object" &&
+      typeof error == "object" &&
       "issues" in error &&
       Array.isArray((error as any).issues)
     ) {
@@ -106,7 +106,7 @@ export function validateEnv(): EnvConfig {
       });
     } else if (
       error &&
-      typeof error === "object" &&
+      typeof error == "object" &&
       "errors" in error &&
       Array.isArray((error as any).errors)
     ) {

@@ -24,7 +24,7 @@ type ThemeColors = {
 };
 
 // OKLCH values for Tailwind's 500 colors (approximate)
-const tailwindColors = {
+export const tailwindColors = {
   neutral: "oklch(0.56 0.00 0)",
   stone: "oklch(0.55 0.01 58)",
   zinc: "oklch(0.55 0.01 286)",

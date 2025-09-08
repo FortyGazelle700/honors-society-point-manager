@@ -24,6 +24,7 @@ import { eventSubmissions } from "@/server/db/schema";
 import { revalidateTag } from "next/cache";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { getPointConfig } from "@/lib/utils";
 
 export type Members = Awaited<ReturnType<typeof getMembers>>;
 export type Events = Awaited<ReturnType<typeof getEvents>>;
@@ -36,7 +37,7 @@ export async function verifyCode({ id, code }: { id: string; code: string }) {
     (event) =>
       event.id == id &&
       event.verificationCode == code &&
-      (event.type == "musicianship" || event.type == "service"),
+      getPointConfig().some((config) => config.id == event.type),
   );
 }
 

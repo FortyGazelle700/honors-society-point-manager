@@ -113,9 +113,7 @@ export const events = sqliteTable("events", {
   hasQrSubmission: integer("has_qr_submission", {
     mode: "boolean",
   }).$defaultFn(() => false),
-  type: text("type", {
-    enum: ["service", "musicianship", "attendance", "other"],
-  }).notNull(),
+  type: text("type").notNull(),
   verificationCode: text("verification_code"),
   location: text("location"),
   date: integer("date", { mode: "timestamp_ms" }),
@@ -142,9 +140,7 @@ export const eventSubmissions = sqliteTable("event_submissions", {
       onUpdate: "restrict",
     }),
   description: text("description"),
-  type: text("type", {
-    enum: ["service", "musicianship", "attendance", "other"],
-  }).notNull(),
+  type: text("type").notNull(),
   officerNotes: text("officer_notes"),
   uploadLink: text("upload_link"),
   status: text("status", {

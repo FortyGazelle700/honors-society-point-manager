@@ -85,7 +85,7 @@ import {
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
+import { cn, getPointConfig } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Popover,
@@ -121,7 +121,7 @@ function emptyEvent(): Events[number] {
     hasQrSubmission: false,
     needsAdditionalInfo: false,
     notes: "",
-    type: "" as "service",
+    type: "",
     verificationCode: randomCode(),
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -1029,18 +1029,13 @@ function ListUI({
                         <div
                           className={cn(
                             "flex items-center gap-1.5 rounded-full px-2 py-1 text-xs",
-                            submission.type == "service" &&
-                              "border-blue-600 bg-blue-800",
-                            submission.type == "musicianship" &&
-                              "border-purple-600 bg-purple-800",
+                            `border-${getPointConfig().find((c) => c.id == submission.type)?.color}-600 bg-${getPointConfig().find((c) => c.id == submission.type)?.color}-800`,
                           )}
                         >
                           <div
                             className={cn(
                               "size-3 rounded-full",
-                              submission.type == "service" && "bg-blue-600",
-                              submission.type == "musicianship" &&
-                                "bg-purple-600",
+                              `bg-${getPointConfig().find((c) => c.id == submission.type)?.color}-600`,
                             )}
                           />
                           {toProperCase(submission.type)} Point
@@ -1053,7 +1048,7 @@ function ListUI({
                             isRejected && "border-red-600 bg-red-800",
                             isPending && "border-yellow-600 bg-yellow-800",
                             submission.status == "cancelled" &&
-                              "border-gray-600 bg-gray-800",
+                            "border-gray-600 bg-gray-800",
                           )}
                         >
                           <div
@@ -1200,15 +1195,15 @@ function ListUI({
                             onClick={
                               defaultStatus == "pending" && isRejected
                                 ? () => {
-                                    // Set back to pending/default
-                                    setSubmissions((subs) =>
-                                      subs.map((sub) =>
-                                        sub.id == submission.id
-                                          ? { ...sub, status: "pending" }
-                                          : sub,
-                                      ),
-                                    );
-                                  }
+                                  // Set back to pending/default
+                                  setSubmissions((subs) =>
+                                    subs.map((sub) =>
+                                      sub.id == submission.id
+                                        ? { ...sub, status: "pending" }
+                                        : sub,
+                                    ),
+                                  );
+                                }
                                 : undefined
                             }
                           >
@@ -1240,9 +1235,9 @@ function ListUI({
                                       subs.map((sub) =>
                                         sub.id == submission.id
                                           ? {
-                                              ...sub,
-                                              officerNotes: e.target.value,
-                                            }
+                                            ...sub,
+                                            officerNotes: e.target.value,
+                                          }
                                           : sub,
                                       ),
                                     );
@@ -1295,24 +1290,24 @@ function ListUI({
                         onClick={
                           submission.status == "approved"
                             ? () => {
-                                // Set back to pending/default
-                                setSubmissions((subs) =>
-                                  subs.map((sub) =>
-                                    sub.id == submission.id
-                                      ? { ...sub, status: "pending" }
-                                      : sub,
-                                  ),
-                                );
-                              }
+                              // Set back to pending/default
+                              setSubmissions((subs) =>
+                                subs.map((sub) =>
+                                  sub.id == submission.id
+                                    ? { ...sub, status: "pending" }
+                                    : sub,
+                                ),
+                              );
+                            }
                             : () => {
-                                setSubmissions((subs) =>
-                                  subs.map((sub) =>
-                                    sub.id == submission.id
-                                      ? { ...sub, status: "approved" }
-                                      : sub,
-                                  ),
-                                );
-                              }
+                              setSubmissions((subs) =>
+                                subs.map((sub) =>
+                                  sub.id == submission.id
+                                    ? { ...sub, status: "approved" }
+                                    : sub,
+                                ),
+                              );
+                            }
                         }
                         disabled={
                           self.role != "owner" &&
@@ -1321,7 +1316,7 @@ function ListUI({
                         }
                       >
                         {defaultStatus == "pending" &&
-                        submission.status == "approved" ? (
+                          submission.status == "approved" ? (
                           <Minus />
                         ) : (
                           <Check />

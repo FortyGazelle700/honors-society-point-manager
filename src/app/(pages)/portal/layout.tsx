@@ -26,7 +26,7 @@ export default async function PortalLayout({
 }) {
   const session = await getSession();
 
-  if (!session) redirect("/");
+  if (!session) redirect("/auth/error?error=unauthenticated");
 
   return children;
 }

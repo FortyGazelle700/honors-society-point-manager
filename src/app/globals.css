@@ -3,6 +3,8 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@source inline('{bg,border}-{neutral,stone,zinc,slate,gray,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{600,800}');
+
 @theme {
   --breakpoint-2xs: 25rem;
   --breakpoint-xs: 30rem;

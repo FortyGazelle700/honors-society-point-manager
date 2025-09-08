@@ -23,6 +23,7 @@ import { db } from "@/server/db";
 import { eventSubmissions, members, user } from "@/server/db/schema";
 import { getEventSubmissions, getMembers, getSession } from "@/server/api";
 import { and, eq, inArray, not } from "drizzle-orm";
+import { getPointConfig } from "@/lib/utils";
 
 export type Members = Awaited<ReturnType<typeof getMembers>>;
 export type Submissions = Awaited<ReturnType<typeof getEventSubmissions>>;
@@ -136,7 +137,9 @@ export async function action(form: FormData) {
             s.type == type,
         ).length;
 
-        const safeType = type == "service" ? "service" : "musicianship";
+        const safeType = getPointConfig().find((c) => c.id == type)
+          ? type
+          : "other";
         const safeValue = Math.max(0, Math.min(5, value));
         if (currentBoosts < safeValue) {
           await trx.insert(eventSubmissions).values({

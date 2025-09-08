@@ -23,6 +23,7 @@ import {
   Calendar,
   CheckCheck,
   Dot,
+  Info,
   ListChecks,
   ShieldUser,
   UserRound,
@@ -64,7 +65,7 @@ export default async function PortalPage() {
           </span>
           <span className="flex items-center text-xs">
             {(await getRole(session!.user.email)) ==
-            (await getRoleName(session!.user.email)) ? (
+              (await getRoleName(session!.user.email)) ? (
               <>{await getRole(session!.user.email)}</>
             ) : (
               <>
@@ -104,9 +105,9 @@ export default async function PortalPage() {
             href: "/portal/officers",
           },
           {
-            icon: Wrench,
-            label: "Modify Configuration",
-            href: "/portal/config",
+            icon: Info,
+            label: "Application Info",
+            href: "/portal/info",
           },
         ].map((item) => (
           <Button

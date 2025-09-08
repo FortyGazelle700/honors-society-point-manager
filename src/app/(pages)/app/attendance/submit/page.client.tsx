@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useRouter } from "next/navigation";
+import { getPointConfig } from "@/lib/utils";
 
 export function EventSubmissionClientPage({
   searchParams,
@@ -62,7 +63,7 @@ export function EventSubmissionClientPage({
     id: "",
     eventId: "",
     description: "",
-    type: "musicianship",
+    type: getPointConfig()[0]?.id,
     officer_notes: "",
     upload_link: "",
     status: "pending",
@@ -80,7 +81,7 @@ export function EventSubmissionClientPage({
       id: new Date(prev.eventDate ?? new Date()).toISOString().split("T")[0],
       eventId: params.get("eventId") ?? prev.eventId ?? "",
       description: params.get("description") ?? prev.description ?? "",
-      type: params.get("type") ?? prev.type ?? "musicianship",
+      type: params.get("type") ?? prev.type ?? getPointConfig()[0]?.id,
       eventDate: new Date(
         params.get("eventDate") ?? prev.eventDate ?? new Date().toISOString(),
       ),

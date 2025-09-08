@@ -73,7 +73,7 @@ import {
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
+import { cn, getPointConfig } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Popover,
@@ -102,7 +102,7 @@ function emptyEvent(): Events[number] {
     hasQrSubmission: false,
     needsAdditionalInfo: false,
     notes: "",
-    type: "" as "service",
+    type: "",
     verificationCode: randomCode(),
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -251,7 +251,7 @@ export default function EventsClientPage({
           qrURL.searchParams.set(
             "eventDate",
             new Date(event.date ?? new Date())?.toISOString() ??
-              new Date().toISOString(),
+            new Date().toISOString(),
           );
           qrURL.searchParams.set("code", event.verificationCode ?? "");
 
@@ -277,7 +277,7 @@ export default function EventsClientPage({
                     setEvents((prev) =>
                       prev.map((o) =>
                         o.id == event.id
-                          ? { ...o, type: value as "service" | "musicianship" }
+                          ? { ...o, type: value }
                           : o,
                       ),
                     );
@@ -286,23 +286,26 @@ export default function EventsClientPage({
                   <SelectTrigger className="h-9 w-full md:flex-1">
                     {event.type
                       ? event.type
-                          .split("-")
-                          .map((word) =>
-                            word
-                              .split("")
-                              .map((letter, idx) =>
-                                idx == 0
-                                  ? letter.toUpperCase()
-                                  : letter.toLowerCase(),
-                              )
-                              .join(""),
-                          )
-                          .join(" ")
+                        .split("-")
+                        .map((word) =>
+                          word
+                            .split("")
+                            .map((letter, idx) =>
+                              idx == 0
+                                ? letter.toUpperCase()
+                                : letter.toLowerCase(),
+                            )
+                            .join(""),
+                        )
+                        .join(" ")
                       : "Select Type"}
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="service">Service</SelectItem>
-                    <SelectItem value="musicianship">Musicianship</SelectItem>
+                    {getPointConfig().map(({ id: type, name }) => (
+                      <SelectItem key={type} value={type}>
+                        {name.charAt(0).toUpperCase() + name.slice(1)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -501,9 +504,9 @@ export default function EventsClientPage({
                               prev.map((o) =>
                                 o.id == event.id
                                   ? {
-                                      ...o,
-                                      needsAdditionalInfo: checked == true,
-                                    }
+                                    ...o,
+                                    needsAdditionalInfo: checked == true,
+                                  }
                                   : o,
                               ),
                             );
@@ -545,9 +548,9 @@ export default function EventsClientPage({
                                 prev.map((o) =>
                                   o.id == event.id
                                     ? {
-                                        ...o,
-                                        verificationCode: randomCode(),
-                                      }
+                                      ...o,
+                                      verificationCode: randomCode(),
+                                    }
                                     : o,
                                 ),
                               );

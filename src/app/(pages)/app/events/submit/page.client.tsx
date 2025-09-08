@@ -39,7 +39,7 @@ import { toast } from "sonner";
 import { action, SafeEvents, Members, verifyCode } from "./page.action";
 import { Combobox } from "@/components/ui/combobox";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { cn, getPointConfig } from "@/lib/utils";
 import { QrScanner } from "@/components/ui/qr-scanner";
 import { Input } from "@/components/ui/input";
 import {
@@ -65,7 +65,7 @@ export function EventSubmissionClientPage({
     id: crypto.randomUUID(),
     eventId: "",
     description: "",
-    type: "service",
+    type: getPointConfig()[0]?.id,
     officer_notes: "",
     upload_link: "",
     status: "pending",
@@ -89,7 +89,7 @@ export function EventSubmissionClientPage({
       ...prev,
       eventId: params.get("eventId") ?? prev.eventId ?? "",
       description: params.get("description") ?? prev.description ?? "",
-      type: params.get("type") ?? prev.type ?? "musicianship",
+      type: params.get("type") ?? prev.type ?? getPointConfig()[0]?.id,
       eventDate: new Date(params.get("eventDate") ?? new Date().toISOString()),
     }));
     setCode(params.get("code") ?? "");
@@ -166,7 +166,7 @@ export function EventSubmissionClientPage({
       if (event) {
         setRequest((prev) => ({
           ...prev,
-          type: event.type ?? prev.type ?? "musicianship",
+          type: event.type ?? prev.type ?? getPointConfig()[0]?.id,
           eventDate: new Date(event.date ?? prev.eventDate ?? new Date()),
         }));
         setSubmissionType(
@@ -302,28 +302,16 @@ export function EventSubmissionClientPage({
             onSelect={(val) =>
               setRequest((prev) => ({ ...prev, eventId: val }))
             }
-            groups={[
-              {
-                header: "Musicianship Events",
-                id: "musicianship",
-                values: events
-                  .filter((e) => e.type == "musicianship")
-                  .map((e) => ({
-                    id: e.id,
-                    render: e.name,
-                  })),
-              },
-              {
-                header: "Service Events",
-                id: "service",
-                values: events
-                  .filter((e) => e.type == "service")
-                  .map((e) => ({
-                    id: e.id,
-                    render: e.name,
-                  })),
-              },
-            ]}
+            groups={getPointConfig()?.map((pt) => ({
+              header: `${pt.name.charAt(0).toUpperCase() + pt.name.slice(1)} Events`,
+              id: pt.id,
+              values: events
+                .filter((e) => e.type == pt.id)
+                .map((e) => ({
+                  id: e.id,
+                  render: e.name,
+                })),
+            })) ?? []}
             allowCustomOption
             customOptionLabel={(opt) => `Create "${opt}"`}
             className="w-full"
@@ -344,30 +332,21 @@ export function EventSubmissionClientPage({
         <div className="flex w-full flex-col gap-2">
           <span className="text-muted-foreground text-sm">Event Type</span>
           <div className="flex w-full gap-2">
-            <Button
-              type="button"
-              variant={request.type == "musicianship" ? "default" : "outline"}
-              className="flex h-36 w-full flex-col items-start justify-end gap-2 rounded-xl border"
-              onClick={() =>
-                setRequest((prev) => ({ ...prev, type: "musicianship" }))
-              }
-              disabled={!request.eventId}
-            >
-              <Music className="size-10" />
-              <span className="text-lg font-bold">Musicianship</span>
-            </Button>
-            <Button
-              type="button"
-              variant={request.type == "service" ? "default" : "outline"}
-              className="flex h-36 w-full flex-col items-start justify-end gap-2 rounded-xl border"
-              onClick={() =>
-                setRequest((prev) => ({ ...prev, type: "service" }))
-              }
-              disabled={!request.eventId}
-            >
-              <HelpingHand className="size-10" />
-              <span className="text-lg font-bold">Service</span>
-            </Button>
+            {getPointConfig().map((pt) => (
+              <Button
+                key={pt.id}
+                type="button"
+                variant={request.type == pt.id ? "default" : "outline"}
+                className="flex h-36 w-full flex-col items-start justify-end gap-2 rounded-xl border"
+                onClick={() =>
+                  setRequest((prev) => ({ ...prev, type: pt.id }))
+                }
+                disabled={!request.eventId}
+              >
+                <pt.Icon className="size-10" />
+                <span className="text-lg font-bold">{pt.name}</span>
+              </Button>
+            ))}
           </div>
         </div>
         <div className="flex w-full flex-col gap-2">
@@ -409,21 +388,21 @@ export function EventSubmissionClientPage({
         </div>
         {(events.find((e) => e.id == request.eventId)?.needsAdditionalInfo ??
           true) && (
-          <label className="flex w-full flex-col gap-2">
-            <span className="text-muted-foreground text-sm">Description</span>
-            <Textarea
-              value={request.description}
-              onChange={(evt) =>
-                setRequest((prev) => ({
-                  ...prev,
-                  description: evt.target.value,
-                }))
-              }
-              disabled={!request.eventId}
-              placeholder="e.x. Mean Girls Musicial, PRMS Winter Concert, etc."
-            />
-          </label>
-        )}
+            <label className="flex w-full flex-col gap-2">
+              <span className="text-muted-foreground text-sm">Description</span>
+              <Textarea
+                value={request.description}
+                onChange={(evt) =>
+                  setRequest((prev) => ({
+                    ...prev,
+                    description: evt.target.value,
+                  }))
+                }
+                disabled={!request.eventId}
+                placeholder="e.x. Mean Girls Musicial, PRMS Winter Concert, etc."
+              />
+            </label>
+          )}
         <div className="flex w-full flex-col gap-2">
           <span className="text-muted-foreground text-sm">Submission Type</span>
           <div className="flex w-full gap-2">

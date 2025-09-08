@@ -28,6 +28,7 @@ import {
   getSession,
 } from "@/server/api";
 import { and, eq, inArray, not, or } from "drizzle-orm";
+import { getPointConfig } from "@/lib/utils";
 
 export type Members = Awaited<ReturnType<typeof getMembers>>;
 export type Events = Awaited<ReturnType<typeof getEvents>>;
@@ -80,7 +81,7 @@ export async function action(form: FormData) {
     }
 
     for (const data of submissions) {
-      if (data.type == "attendance" || data.type == "service") continue;
+      // if (data.type == "attendance" || data.type == "service") continue;
       addedMembers.add(data.memberId);
     }
 
@@ -98,7 +99,7 @@ export async function action(form: FormData) {
       .where(
         and(
           not(inArray(events.id, Array.from(idsInForm))),
-          or(eq(events.type, "musicianship"), eq(events.type, "service")),
+          or(inArray(events.type, getPointConfig().map((c) => c.id))),
         ),
       );
 
@@ -108,8 +109,7 @@ export async function action(form: FormData) {
         and(
           not(inArray(eventSubmissions.id, Array.from(newSubmissions))),
           or(
-            eq(eventSubmissions.type, "musicianship"),
-            eq(eventSubmissions.type, "service"),
+            inArray(eventSubmissions.type, getPointConfig().map((c) => c.id)),
           ),
           inArray(eventSubmissions.eventId, Array.from(idsInForm)),
         ),
@@ -166,7 +166,9 @@ export async function action(form: FormData) {
           ...data,
           id: id,
           date: data.date ? new Date(data.date) : null,
-          type: data.type == "service" ? "service" : "musicianship",
+          type: getPointConfig().find((c) => c.id == data.type)
+            ? data.type
+            : "other",
         })
         .onConflictDoUpdate({
           target: events.id,
@@ -174,7 +176,9 @@ export async function action(form: FormData) {
             ...data,
             id: id,
             date: data.date ? new Date(data.date) : null,
-            type: data.type == "service" ? "service" : "musicianship",
+            type: getPointConfig().find((c) => c.id == data.type)
+              ? data.type
+              : "other",
             updatedAt: new Date(),
           },
         });
@@ -197,7 +201,7 @@ export async function action(form: FormData) {
             if (
               data.status == "approved" &&
               submissions.find((s) => s.id == data.eventId)?.status !=
-                data.status
+              data.status
             ) {
               return `<added by ${self.id}>`;
             } else {

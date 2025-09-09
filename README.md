@@ -12,6 +12,7 @@ It helps us keep track of members, events, and important information all in one 
 3. Add a new project to Netlify
 4. Sign in with your Github Account, and deploy this project
    - When prompted to add environment variables, copy the [.env.example](.env.example) file and replacing instances of `<sql_lite_url>` and `<s3_access_key_id>` with your own values.
+   - If using a platform (such as Netlify), you may need to copy `POINT_TYPES` into the `NEXT_PUBLIC_POINT_TYPES` enviornment variable (instead of using the shorthand `$POINT_TYPES`). Some platforms (such as self-hosting) allow you to use the variables like in the `.env.example`.
 5. Deploy!
    - Recommend adding a domain, as some schools block the `netlify.app` domain
 

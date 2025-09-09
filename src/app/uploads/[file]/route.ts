@@ -49,8 +49,8 @@ export async function GET(
       return new Response(s3Response.Body as ReadableStream, {
         headers: {
           "Cache-Control": "public, max-age=31536000, immutable",
-          "Content-Type": s3Response.ContentType || "application/octet-stream",
-          "Content-Length": s3Response.ContentLength?.toString() || "",
+          "Content-Type": s3Response.ContentType ?? "application/octet-stream",
+          "Content-Length": s3Response.ContentLength?.toString() ?? "",
         },
       });
     },

@@ -89,7 +89,7 @@ function Button({
   return (
     <Comp
       data-slot="button"
-      type={Comp == "button" ? type || "button" : undefined}
+      type={Comp == "button" ? (type ?? "button") : undefined}
       className={cn(
         href && disabled && "pointer-events-none opacity-50",
         buttonVariants({ variant, size, className }),

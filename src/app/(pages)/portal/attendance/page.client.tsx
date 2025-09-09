@@ -25,7 +25,6 @@ import {
   CalendarIcon,
   Check,
   CircleAlert,
-  CircleSlash,
   Eraser,
   ExternalLink,
   Loader,
@@ -39,13 +38,18 @@ import {
   Trash,
   UsersRound,
 } from "lucide-react";
-import { action, Events, Members, Submissions } from "./page.action";
+import {
+  action,
+  type Events,
+  type Members,
+  type Submissions,
+} from "./page.action";
 import { useFormStatus } from "react-dom";
 import Fuse from "fuse.js";
 
 import {
-  Dispatch,
-  SetStateAction,
+  type Dispatch,
+  type SetStateAction,
   useEffect,
   useMemo,
   useRef,
@@ -58,12 +62,6 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select";
-import {
   ResponsivePopover,
   ResponsivePopoverBody,
   ResponsivePopoverContent,
@@ -72,14 +70,8 @@ import {
   ResponsivePopoverTitle,
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
-import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import QRCode from "react-qr-code";
 
@@ -133,7 +125,7 @@ export default function AttendanceClientPage({
         setAddedMembers(newMembers);
       }
     }, 100);
-  }, [addedMembers]);
+  }, [addedMembers, submissions]);
 
   useEffect(() => {
     let newEvents = events;
@@ -741,7 +733,11 @@ function MemberSelector({
                 )}
               >
                 <div className="flex flex-col items-start">
-                  <span>Add "{participantSearch.trim()}"</span>
+                  <span>
+                    Add {'"'}
+                    {participantSearch.trim()}
+                    {'"'}
+                  </span>
                   <span className="text-muted-foreground text-xs">
                     Participant
                   </span>

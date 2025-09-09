@@ -45,7 +45,7 @@ export function QrScanner({
     );
 
     const debounse = setTimeout(() => {
-      qrScanner.start();
+      qrScanner.start().catch(console.error);
     }, 100);
     return () => {
       clearTimeout(debounse);

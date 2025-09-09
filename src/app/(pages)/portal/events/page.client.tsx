@@ -39,13 +39,18 @@ import {
   Trash,
   UsersRound,
 } from "lucide-react";
-import { action, Events, Members, Submissions } from "./page.action";
+import {
+  action,
+  type Events,
+  type Members,
+  type Submissions,
+} from "./page.action";
 import { useFormStatus } from "react-dom";
 import Fuse from "fuse.js";
 
 import {
-  Dispatch,
-  SetStateAction,
+  type Dispatch,
+  type SetStateAction,
   useEffect,
   useMemo,
   useRef,
@@ -135,7 +140,7 @@ export default function EventsClientPage({
         setAddedMembers(newMembers);
       }
     }, 100);
-  }, [addedMembers]);
+  }, [addedMembers, submissions]);
 
   useEffect(() => {
     let newEvents = events;
@@ -183,7 +188,7 @@ export default function EventsClientPage({
       return;
     const table = value.split("\n");
 
-    let newEvents = events.slice(0, -1);
+    const newEvents = events.slice(0, -1);
 
     for (const name of table) {
       newEvents.push({
@@ -251,7 +256,7 @@ export default function EventsClientPage({
           qrURL.searchParams.set(
             "eventDate",
             new Date(event.date ?? new Date())?.toISOString() ??
-            new Date().toISOString(),
+              new Date().toISOString(),
           );
           qrURL.searchParams.set("code", event.verificationCode ?? "");
 
@@ -259,7 +264,7 @@ export default function EventsClientPage({
             <div className="flex gap-2" key={String(event.id)} id={event.id}>
               <div className="flex flex-1 flex-col items-start gap-2 md:flex-row md:items-center">
                 <Input
-                  value={event.name!}
+                  value={event.name}
                   onChange={(e) => {
                     setEvents((prev) =>
                       prev.map((o) =>
@@ -276,9 +281,7 @@ export default function EventsClientPage({
                   onValueChange={(value) => {
                     setEvents((prev) =>
                       prev.map((o) =>
-                        o.id == event.id
-                          ? { ...o, type: value }
-                          : o,
+                        o.id == event.id ? { ...o, type: value } : o,
                       ),
                     );
                   }}
@@ -286,18 +289,18 @@ export default function EventsClientPage({
                   <SelectTrigger className="h-9 w-full md:flex-1">
                     {event.type
                       ? event.type
-                        .split("-")
-                        .map((word) =>
-                          word
-                            .split("")
-                            .map((letter, idx) =>
-                              idx == 0
-                                ? letter.toUpperCase()
-                                : letter.toLowerCase(),
-                            )
-                            .join(""),
-                        )
-                        .join(" ")
+                          .split("-")
+                          .map((word) =>
+                            word
+                              .split("")
+                              .map((letter, idx) =>
+                                idx == 0
+                                  ? letter.toUpperCase()
+                                  : letter.toLowerCase(),
+                              )
+                              .join(""),
+                          )
+                          .join(" ")
                       : "Select Type"}
                   </SelectTrigger>
                   <SelectContent>
@@ -504,9 +507,9 @@ export default function EventsClientPage({
                               prev.map((o) =>
                                 o.id == event.id
                                   ? {
-                                    ...o,
-                                    needsAdditionalInfo: checked == true,
-                                  }
+                                      ...o,
+                                      needsAdditionalInfo: checked == true,
+                                    }
                                   : o,
                               ),
                             );
@@ -548,9 +551,9 @@ export default function EventsClientPage({
                                 prev.map((o) =>
                                   o.id == event.id
                                     ? {
-                                      ...o,
-                                      verificationCode: randomCode(),
-                                    }
+                                        ...o,
+                                        verificationCode: randomCode(),
+                                      }
                                     : o,
                                 ),
                               );
@@ -896,7 +899,11 @@ function MemberSelector({
                 )}
               >
                 <div className="flex flex-col items-start">
-                  <span>Add "{participantSearch.trim()}"</span>
+                  <span>
+                    Add {'"'}
+                    {participantSearch.trim()}
+                    {'"'}
+                  </span>
                   <span className="text-muted-foreground text-xs">
                     Participant
                   </span>

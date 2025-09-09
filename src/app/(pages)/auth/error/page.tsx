@@ -41,7 +41,7 @@ export default async function ErrorPage({
                   Something ... went wrong :/
                 </h1>
                 <p className="text-muted-foreground">
-                  Hmm, something isn't right, maybe try again?
+                  Hmm, something isn{"'"}t right, maybe try again?
                 </p>
               </div>
             );
@@ -50,7 +50,7 @@ export default async function ErrorPage({
               <div className="flex flex-col gap-2">
                 <h1 className="text-2xl font-bold">Invalid Code</h1>
                 <p className="text-muted-foreground">
-                  Hmm, something isn't right, maybe try again?
+                  Hmm, something isn{"'"}t right, maybe try again?
                 </p>
               </div>
             );

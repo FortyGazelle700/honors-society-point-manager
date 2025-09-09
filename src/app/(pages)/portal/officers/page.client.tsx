@@ -30,7 +30,7 @@ import {
   Slash,
   Trash,
 } from "lucide-react";
-import { action, Members } from "./page.action";
+import { action, type Members } from "./page.action";
 import { useFormStatus } from "react-dom";
 
 import { useEffect, useRef, useState } from "react";
@@ -161,7 +161,13 @@ export default function OfficersClientPage({
                     );
                   }}
                   allowCustomOption
-                  customOptionLabel={(option) => <>Add "{option}"</>}
+                  customOptionLabel={(option) => (
+                    <>
+                      Add {'"'}
+                      {option}
+                      {'"'}
+                    </>
+                  )}
                   optionLabel={(option) => <>{option}</>}
                   placeholders={{
                     emptyValue: "Search members...",
@@ -195,7 +201,13 @@ export default function OfficersClientPage({
                     },
                   ]}
                   allowCustomOption
-                  customOptionLabel={(option) => <>Use "{option}"</>}
+                  customOptionLabel={(option) => (
+                    <>
+                      Use {'"'}
+                      {option}
+                      {'"'}
+                    </>
+                  )}
                   optionLabel={(option) => <>{option}</>}
                   restrictCustomOption={(option) => option == "Staff"}
                   value={officer.roleName}

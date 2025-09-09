@@ -20,20 +20,10 @@
 
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
-import { ArrowRight, RotateCw, Search, ShieldUser } from "lucide-react";
+import { RotateCw } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
-import {
-  ResponsivePopover,
-  ResponsivePopoverBody,
-  ResponsivePopoverContent,
-  ResponsivePopoverHeader,
-  ResponsivePopoverTitle,
-  ResponsivePopoverTrigger,
-} from "@/components/ui/responsive-popover";
-import Fuse from "fuse.js";
-import { cn } from "@/lib/utils";
 
 export function OfficerButton() {
   const router = useRouter();

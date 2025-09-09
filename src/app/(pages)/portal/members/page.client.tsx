@@ -25,18 +25,20 @@ import {
   ArrowLeftRight,
   CircleAlert,
   Eraser,
-  HelpingHand,
-  Info,
   Loader,
-  Music,
   Save,
   Slash,
   Trash,
 } from "lucide-react";
-import { action, Members, PointBoost, Submissions } from "./page.action";
+import {
+  action,
+  type Members,
+  type PointBoost,
+  type Submissions,
+} from "./page.action";
 import { useFormStatus } from "react-dom";
 
-import { ChartConfig, ChartContainer } from "@/components/ui/chart";
+import { type ChartConfig, ChartContainer } from "@/components/ui/chart";
 import {
   PolarGrid,
   PolarRadiusAxis,
@@ -51,14 +53,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import {
-  ResponsivePopover,
-  ResponsivePopoverBody,
-  ResponsivePopoverContent,
-  ResponsivePopoverHeader,
-  ResponsivePopoverTitle,
-  ResponsivePopoverTrigger,
-} from "@/components/ui/responsive-popover";
 import { cn, getPointConfig } from "@/lib/utils";
 import {
   Popover,
@@ -82,14 +76,13 @@ function emptyMember(): Members[number] {
 export default function MembersClientPage({
   members: defaultMembers,
   submissions,
-  config,
   self,
 }: {
   members: Members;
   submissions: Submissions;
-  config: Record<string, string>;
   self: Members[number];
 }) {
+  const config = getPointConfig();
   const [members, setMembers] = useState(defaultMembers);
   const [pointBoosts, setPointBoosts] = useState<PointBoost>({});
 
@@ -97,15 +90,13 @@ export default function MembersClientPage({
     const newPointBoost = pointBoosts;
     for (const submission of submissions) {
       if (submission.eventId == "<point_boost>") {
-        if (newPointBoost[submission.memberId] == undefined) {
-          newPointBoost[submission.memberId] = {};
-        }
+        newPointBoost[submission.memberId] ??= {};
         newPointBoost[submission.memberId][submission.type] =
           (newPointBoost[submission.memberId][submission.type] ?? 0) + 1;
       }
     }
     setPointBoosts(newPointBoost);
-  }, []);
+  }, [pointBoosts, submissions]);
 
   useEffect(() => {
     let newMembers = members;
@@ -150,7 +141,7 @@ export default function MembersClientPage({
       return;
     const table = value.split("\n").map((row) => row.split("\t"));
 
-    let newMembers = members.slice(0, -1);
+    const newMembers = members.slice(0, -1);
 
     for (const [first, last] of table) {
       if (first && last) {
@@ -196,9 +187,9 @@ export default function MembersClientPage({
                 arr.findIndex(
                   (m) =>
                     m.firstName.trim().toLowerCase() ==
-                    member.firstName.trim().toLowerCase() &&
+                      member.firstName.trim().toLowerCase() &&
                     m.lastName.trim().toLowerCase() ==
-                    member.lastName.trim().toLowerCase(),
+                      member.lastName.trim().toLowerCase(),
                 ) != idx,
             );
           })()}
@@ -234,7 +225,11 @@ export default function MembersClientPage({
                             if (subs == 0) {
                               return "bg-red-800";
                             }
-                            return subs >= Number(config[`${type}_points`] ?? 1)
+                            return subs >=
+                              Number(
+                                config.find((c) => c.id == type)
+                                  ?.minimumPoints ?? 1,
+                              )
                               ? "bg-green-800"
                               : "bg-yellow-800";
                           })(),
@@ -261,7 +256,10 @@ export default function MembersClientPage({
                                   s.status == "auto-approved"),
                             ).length +
                               (pointBoosts[member.id]?.[type] ?? 0)) /
-                            Number(config[`${type}_points`] ?? 1)
+                            Number(
+                              config.find((c) => c.id == type)?.minimumPoints ??
+                                1,
+                            )
                           }
                         />
                         <span className="flex-1">
@@ -272,10 +270,15 @@ export default function MembersClientPage({
                             (s) =>
                               s.memberId == member.id &&
                               s.type == type &&
-                              s.eventId != "<point_boost>",
+                              s.eventId != "<point_boost>" &&
+                              (s.status == "approved" ||
+                                s.status == "auto-approved"),
                           ).length + (pointBoosts[member.id]?.[type] ?? 0)}
                           <Slash className="size-3" />{" "}
-                          {Number(config[`${type}_points`] ?? 1)}
+                          {Number(
+                            config.find((c) => c.id == type)?.minimumPoints ??
+                              1,
+                          )}
                         </span>
                         <Input
                           value={pointBoosts[member.id]?.[type] ?? 0}
@@ -299,7 +302,7 @@ export default function MembersClientPage({
                 </PopoverContent>
               </Popover>
               <Input
-                value={member.firstName!}
+                value={member.firstName}
                 onChange={(e) => {
                   setMembers((prev) =>
                     prev.map((o) =>
@@ -310,13 +313,13 @@ export default function MembersClientPage({
                   );
                 }}
                 onPaste={(e) => {
-                  handlePaste(e.currentTarget);
+                  handlePaste(e.currentTarget).catch(console.error);
                 }}
                 className="h-9 md:w-[40ch]"
                 placeholder="John"
               />
               <Input
-                value={member.lastName!}
+                value={member.lastName}
                 onChange={(e) => {
                   setMembers((prev) =>
                     prev.map((o) =>
@@ -344,13 +347,13 @@ export default function MembersClientPage({
                       prev.map((o) =>
                         o.id == member.id
                           ? {
-                            ...o,
-                            role:
-                              member.role != "member"
-                                ? "member"
-                                : "participant",
-                            roleName: "Member",
-                          }
+                              ...o,
+                              role:
+                                member.role != "member"
+                                  ? "member"
+                                  : "participant",
+                              roleName: "Member",
+                            }
                           : o,
                       ),
                     );
@@ -378,20 +381,20 @@ export default function MembersClientPage({
                 m.firstName == member.firstName &&
                 m.lastName == member.lastName,
             ).length >= 2 && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex size-9 items-center justify-center rounded-lg bg-yellow-800">
-                      <CircleAlert className="size-4" />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="left">
-                    This member already exists in the list.
-                  </TooltipContent>
-                </Tooltip>
-              )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex size-9 items-center justify-center rounded-lg bg-yellow-800">
+                    <CircleAlert className="size-4" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  This member already exists in the list.
+                </TooltipContent>
+              </Tooltip>
+            )}
             {member.firstName == "" &&
-              member.lastName == "" &&
-              member.email == "" ? (
+            member.lastName == "" &&
+            member.email == "" ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button

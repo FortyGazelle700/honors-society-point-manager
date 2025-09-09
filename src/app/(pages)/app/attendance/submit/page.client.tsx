@@ -19,24 +19,17 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  ArrowLeft,
-  CalendarIcon,
-  Camera,
-  CircleAlert,
-  HelpingHand,
-  Info,
-  Loader,
-  Music,
-  QrCode,
-  Check,
-} from "lucide-react";
+import { ArrowLeft, CalendarIcon, Loader, Check } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
-import { action, SafeEvents, Members, verifyCode } from "./page.action";
+import {
+  action,
+  type SafeEvents,
+  type Members,
+  verifyCode,
+} from "./page.action";
 import { Combobox } from "@/components/ui/combobox";
-import { Textarea } from "@/components/ui/textarea";
 import { QrScanner } from "@/components/ui/qr-scanner";
 import { Input } from "@/components/ui/input";
 import {
@@ -51,7 +44,6 @@ import { getPointConfig } from "@/lib/utils";
 export function EventSubmissionClientPage({
   searchParams,
   members,
-  events,
   memberId,
 }: {
   searchParams: Record<string, string | undefined>;
@@ -70,7 +62,7 @@ export function EventSubmissionClientPage({
     eventDate: new Date(),
     createdAt: new Date(),
     updatedAt: new Date(),
-    memberId: memberId || "",
+    memberId: memberId ?? "",
   });
   const [code, setCode] = useState("");
   const verifyDebounce = useRef<NodeJS.Timeout | null>(null);
@@ -100,7 +92,7 @@ export function EventSubmissionClientPage({
 
   useEffect(() => {
     populateData(new URLSearchParams(searchParams as Record<string, string>));
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!code) return;
@@ -112,19 +104,21 @@ export function EventSubmissionClientPage({
       verifyCode({
         id: request.eventId,
         code: code,
-      }).then((success) => {
-        if (success) {
-          toast.success("Event Code verified successfully!", {
-            id: "qr-verify",
-          });
-        } else {
-          toast.error("Invalid event code.", {
-            id: "qr-verify",
-          });
-        }
-      });
+      })
+        .then((success) => {
+          if (success) {
+            toast.success("Event Code verified successfully!", {
+              id: "qr-verify",
+            });
+          } else {
+            toast.error("Invalid event code.", {
+              id: "qr-verify",
+            });
+          }
+        })
+        .catch(() => console.error("Failed to verify code"));
     }, 1000);
-  }, [code]);
+  }, [code, request.eventId]);
 
   const qrReader = useMemo(
     () => (
@@ -274,13 +268,13 @@ function SaveButton({ disabled }: { disabled?: boolean }) {
       toast.success("Submitted!", { id: "submit-event" });
       router.push("/app");
     }
-  }, [pending]);
+  }, [pending, router]);
 
   return (
     <Button
       type="submit"
       className="border-primary size-12 border-2"
-      disabled={disabled || pending}
+      disabled={disabled! || pending}
     >
       {pending ? <Loader className="animate-spin" /> : <Check />}
     </Button>

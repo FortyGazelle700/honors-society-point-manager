@@ -20,14 +20,14 @@
 
 import { revalidateTag } from "next/cache";
 import { db } from "@/server/db";
-import { events, eventSubmissions, members, user } from "@/server/db/schema";
+import { eventSubmissions } from "@/server/db/schema";
 import {
-  getEvents,
+  type getEvents,
   getEventSubmissions,
   getMembers,
   getSession,
 } from "@/server/api";
-import { and, eq, inArray, not } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export type Members = Awaited<ReturnType<typeof getMembers>>;
@@ -62,16 +62,16 @@ export async function action(form: FormData) {
   });
 
   await db.transaction(async (trx) => {
-    let entrySubmissions = JSON.parse(
-      String(form.get("submissions")),
+    const entrySubmissions = JSON.parse(
+      String(form.get("submissions") as string),
     ) as Submissions;
 
     for (const data of entrySubmissions) {
       if (data.id == "" || data.id == null) continue;
 
-      delete (data as any).eventDate;
-      delete (data as any).updatedAt;
-      delete (data as any).createdAt;
+      delete (data as { eventDate: unknown }).eventDate;
+      delete (data as { updatedAt: unknown }).updatedAt;
+      delete (data as { createdAt: unknown }).createdAt;
 
       const cannotChangeStatus =
         self.role == "officer" &&

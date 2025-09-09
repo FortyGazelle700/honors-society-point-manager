@@ -22,21 +22,15 @@ import {
   Check,
   CircleSlash,
   Coins,
-  HelpingHand,
   Lectern,
   Minus,
-  Music,
   Slash,
   Upload,
   UserRound,
   X,
 } from "lucide-react";
 import { SignOutButton } from "./page.client";
-import {
-  getEvents,
-  getEventSubmissions,
-  getMembers,
-} from "@/server/api";
+import { getEvents, getEventSubmissions, getMembers } from "@/server/api";
 import { cookies } from "next/headers";
 import { cn, getPointConfig } from "@/lib/utils";
 import {
@@ -52,8 +46,8 @@ export const metadata: Metadata = {
 
 export default async function AppPage() {
   const cookieList = await cookies();
-  const events = (await getEvents()).filter(
-    (e) => getPointConfig().some((pt) => pt.id == e.type),
+  const events = (await getEvents()).filter((e) =>
+    getPointConfig().some((pt) => pt.id == e.type),
   );
   const memberId = cookieList.get("selectedMember")?.value;
   const members = await getMembers();
@@ -91,58 +85,64 @@ export default async function AppPage() {
         </div>
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {getPointConfig().map((pt) => ({
-          icon: pt.Icon,
-          label: pt.name,
-          amount: submissions.filter(
-            (s) => s.type == pt.id && (s.status == "approved" || s.status == "auto-approved"),
-          ).length,
-          min: Number(getPointConfig().find((c) => c.id == pt.id)?.minimumPoints ?? 0),
-        })).map(({ icon: Icon, label, amount, min }) => (
-          <div
-            key={label}
-            className="bg-secondary/50 relative isolate flex h-auto items-end justify-between gap-2 overflow-clip rounded-xl !px-6 py-6 pt-32"
-          >
-            <Icon className="stroke-secondary absolute -bottom-10 -left-10 -z-10 size-64 stroke-3" />
-            <div className="flex flex-col gap-2">
-              <Icon className="size-10 stroke-1" />
-              <div className="text-lg">{label}</div>
-            </div>
+        {getPointConfig()
+          .map((pt) => ({
+            icon: pt.Icon,
+            label: pt.name,
+            amount: submissions.filter(
+              (s) =>
+                s.type == pt.id &&
+                (s.status == "approved" || s.status == "auto-approved"),
+            ).length,
+            min: Number(
+              getPointConfig().find((c) => c.id == pt.id)?.minimumPoints ?? 0,
+            ),
+          }))
+          .map(({ icon: Icon, label, amount, min }) => (
             <div
-              className={cn(
-                "absolute top-4 right-4 flex h-6 items-center justify-center rounded-full",
-                amount >= min ? "bg-green-500" : "bg-red-500",
-                !memberId && "bg-gray-500",
-              )}
+              key={label}
+              className="bg-secondary/50 relative isolate flex h-auto items-end justify-between gap-2 overflow-clip rounded-xl !px-6 py-6 pt-32"
             >
-              <span className="flex items-center gap-1 px-2 py-1 text-xs text-white">
-                {memberId ? (
-                  amount >= min ? (
-                    <>
-                      <Check className="size-3" /> Sufficient
-                    </>
+              <Icon className="stroke-secondary absolute -bottom-10 -left-10 -z-10 size-64 stroke-3" />
+              <div className="flex flex-col gap-2">
+                <Icon className="size-10 stroke-1" />
+                <div className="text-lg">{label}</div>
+              </div>
+              <div
+                className={cn(
+                  "absolute top-4 right-4 flex h-6 items-center justify-center rounded-full",
+                  amount >= min ? "bg-green-500" : "bg-red-500",
+                  !memberId && "bg-gray-500",
+                )}
+              >
+                <span className="flex items-center gap-1 px-2 py-1 text-xs text-white">
+                  {memberId ? (
+                    amount >= min ? (
+                      <>
+                        <Check className="size-3" /> Sufficient
+                      </>
+                    ) : (
+                      <>
+                        <X className="size-3" /> Insufficent
+                      </>
+                    )
                   ) : (
                     <>
-                      <X className="size-3" /> Insufficent
+                      <CircleSlash className="size-3" /> Unknown
                     </>
-                  )
-                ) : (
-                  <>
-                    <CircleSlash className="size-3" /> Unknown
-                  </>
-                )}
-              </span>
+                  )}
+                </span>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span className="flex items-center gap-1 text-3xl font-bold">
+                  {memberId ? amount : <Minus className="size-8" />}
+                </span>
+                <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                  <Slash className="size-3" /> {min} required
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col items-end gap-1">
-              <span className="flex items-center gap-1 text-3xl font-bold">
-                {memberId ? amount : <Minus className="size-8" />}
-              </span>
-              <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                <Slash className="size-3" /> {min} required
-              </span>
-            </div>
-          </div>
-        ))}
+          ))}
       </div>
       <h2 className="mt-4 text-xl font-bold">Events</h2>
       <div className="flex flex-col gap-2">
@@ -186,7 +186,7 @@ export default async function AppPage() {
                     !event.notes && "italic opacity-40",
                   )}
                 >
-                  {event.notes || "No additional notes provided"}
+                  {(event.notes ?? "") || "No additional notes provided"}
                 </span>
                 <div className="mt-2 flex items-center gap-2">
                   <div
@@ -309,13 +309,13 @@ export default async function AppPage() {
                       "flex items-center gap-1.5 rounded-full px-2 py-1 text-xs",
                       (submission.status == "approved" ||
                         submission.status == "auto-approved") &&
-                      "border-green-600 bg-green-800",
+                        "border-green-600 bg-green-800",
                       submission.status == "rejected" &&
-                      "border-red-600 bg-red-800",
+                        "border-red-600 bg-red-800",
                       submission.status == "pending" &&
-                      "border-yellow-600 bg-yellow-800",
+                        "border-yellow-600 bg-yellow-800",
                       submission.status == "cancelled" &&
-                      "border-gray-600 bg-gray-800",
+                        "border-gray-600 bg-gray-800",
                     )}
                   >
                     <div
@@ -323,7 +323,7 @@ export default async function AppPage() {
                         "size-3 rounded-full",
                         (submission.status == "approved" ||
                           submission.status == "auto-approved") &&
-                        "bg-green-600",
+                          "bg-green-600",
                         submission.status == "rejected" && "bg-red-600",
                         submission.status == "pending" && "bg-yellow-600",
                         submission.status == "cancelled" && "bg-gray-600",

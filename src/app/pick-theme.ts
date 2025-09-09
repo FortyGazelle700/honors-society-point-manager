@@ -16,12 +16,13 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-type ThemeColors = {
-  [key: string]: {
+type ThemeColors = Record<
+  string,
+  {
     primary: string; // oklch color string
     foreground: "white" | "black";
-  };
-};
+  }
+>;
 
 // OKLCH values for Tailwind's 500 colors (approximate)
 export const tailwindColors = {
@@ -52,7 +53,7 @@ export const tailwindColors = {
 // Get contrast based on OKLCH lightness
 function getContrastOKLCH(oklch: string): "white" | "black" {
   // oklch(L C H)
-  const match = oklch.match(/oklch\(([\d.]+)\s+[\d.]+\s+[\d.]+\)/);
+  const match = /oklch\(([\d.]+)\s+[\d.]+\s+[\d.]+\)/.exec(oklch);
   if (!match) return "black";
   const lightness = parseFloat(match[1]);
   // Threshold: 0.7 is a reasonable split for white/black foreground

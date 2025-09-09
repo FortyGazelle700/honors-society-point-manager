@@ -20,9 +20,9 @@
 
 import { revalidateTag } from "next/cache";
 import { db } from "@/server/db";
-import { events, eventSubmissions, members, user } from "@/server/db/schema";
+import { events, eventSubmissions, members } from "@/server/db/schema";
 import {
-  getEvents,
+  type getEvents,
   getEventSubmissions,
   getMembers,
   getSession,
@@ -48,10 +48,14 @@ export async function action(form: FormData) {
     return;
   }
 
-  const entryEvents = JSON.parse(String(form.get("events"))) as Events;
-  const entryMembers = JSON.parse(String(form.get("members"))) as Members;
+  const entryEvents = JSON.parse(
+    String(form.get("events") as string),
+  ) as Events;
+  const entryMembers = JSON.parse(
+    String(form.get("members") as string),
+  ) as Members;
   let entrySubmissions = JSON.parse(
-    String(form.get("submissions")),
+    String(form.get("submissions") as string),
   ) as Submissions;
 
   await db.transaction(async (trx) => {
@@ -94,26 +98,30 @@ export async function action(form: FormData) {
         ),
       );
 
-    await trx
-      .delete(events)
-      .where(
-        and(
-          not(inArray(events.id, Array.from(idsInForm))),
-          or(inArray(events.type, getPointConfig().map((c) => c.id))),
-        ),
-      );
-
-    await trx
-      .delete(eventSubmissions)
-      .where(
-        and(
-          not(inArray(eventSubmissions.id, Array.from(newSubmissions))),
-          or(
-            inArray(eventSubmissions.type, getPointConfig().map((c) => c.id)),
+    await trx.delete(events).where(
+      and(
+        not(inArray(events.id, Array.from(idsInForm))),
+        or(
+          inArray(
+            events.type,
+            getPointConfig().map((c) => c.id),
           ),
-          inArray(eventSubmissions.eventId, Array.from(idsInForm)),
         ),
-      );
+      ),
+    );
+
+    await trx.delete(eventSubmissions).where(
+      and(
+        not(inArray(eventSubmissions.id, Array.from(newSubmissions))),
+        or(
+          inArray(
+            eventSubmissions.type,
+            getPointConfig().map((c) => c.id),
+          ),
+        ),
+        inArray(eventSubmissions.eventId, Array.from(idsInForm)),
+      ),
+    );
 
     for (const data of entryMembers) {
       if (data.firstName == "" || data.lastName == "") continue;
@@ -125,8 +133,8 @@ export async function action(form: FormData) {
           "_",
         )}.${data.firstName.trim().toLowerCase().replaceAll(" ", "_")}`;
 
-      delete (data as any).updatedAt;
-      delete (data as any).createdAt;
+      delete (data as { updatedAt?: unknown }).updatedAt;
+      delete (data as { createdAt?: unknown }).createdAt;
 
       entrySubmissions = entrySubmissions.map((s) => {
         if (s.memberId == data.id) {
@@ -138,7 +146,7 @@ export async function action(form: FormData) {
         return s;
       });
 
-      delete (data as any).id;
+      delete (data as { id?: unknown }).id;
 
       await trx
         .insert(members)
@@ -156,9 +164,9 @@ export async function action(form: FormData) {
       if (data.id == "" || data.name == "") continue;
       const id = data.name.trim().toLowerCase().replaceAll(" ", "_");
 
-      delete (data as any).id;
-      delete (data as any).updatedAt;
-      delete (data as any).createdAt;
+      delete (data as { id?: unknown }).id;
+      delete (data as { updatedAt?: unknown }).updatedAt;
+      delete (data as { createdAt?: unknown }).createdAt;
 
       await trx
         .insert(events)
@@ -189,8 +197,8 @@ export async function action(form: FormData) {
     for (const data of entrySubmissions) {
       if (data.id == "" || data.id == null) continue;
 
-      delete (data as any).updatedAt;
-      delete (data as any).createdAt;
+      delete (data as { updatedAt?: unknown }).updatedAt;
+      delete (data as { createdAt?: unknown }).createdAt;
 
       await trx
         .insert(eventSubmissions)
@@ -201,7 +209,7 @@ export async function action(form: FormData) {
             if (
               data.status == "approved" &&
               submissions.find((s) => s.id == data.eventId)?.status !=
-              data.status
+                data.status
             ) {
               return `<added by ${self.id}>`;
             } else {

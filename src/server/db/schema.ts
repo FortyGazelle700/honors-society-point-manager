@@ -158,14 +158,3 @@ export const eventSubmissions = sqliteTable("event_submissions", {
     () => /* @__PURE__ */ new Date(),
   ),
 });
-
-export const config = sqliteTable("config", {
-  key: text("key").notNull().unique().primaryKey(),
-  value: text("value").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).$defaultFn(
-    () => /* @__PURE__ */ new Date(),
-  ),
-  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).$defaultFn(
-    () => /* @__PURE__ */ new Date(),
-  ),
-});

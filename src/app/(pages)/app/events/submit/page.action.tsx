@@ -17,13 +17,12 @@
  */
 
 "use server";
-import { getMembers, getEvents, getEventSubmissions } from "@/server/api";
+import { type getMembers, getEvents, getEventSubmissions } from "@/server/api";
 import { randomUUID } from "crypto";
 import { db } from "@/server/db";
 import { eventSubmissions } from "@/server/db/schema";
 import { revalidateTag } from "next/cache";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getPointConfig } from "@/lib/utils";
 
 export type Members = Awaited<ReturnType<typeof getMembers>>;
@@ -43,7 +42,7 @@ export async function verifyCode({ id, code }: { id: string; code: string }) {
 
 export async function action(form: FormData) {
   const entryRequest = JSON.parse(
-    String(form.get("request")),
+    String(form.get("request") as string),
   ) as Submissions[number];
   const entryCode = form.get("code") as string | null;
   let entryFile = form.get("file") as File | null;
@@ -54,9 +53,7 @@ export async function action(form: FormData) {
 
   const events = await getEvents();
   const submissions = await getEventSubmissions();
-  const event = events.find(
-    (e) => e.id == entryRequest.eventId,
-  ) as Events[number];
+  const event = events.find((e) => e.id == entryRequest.eventId);
 
   if (!event?.hasQrSubmission && entryCode != "") {
     console.error("Cannot have an event code present");
@@ -135,7 +132,7 @@ export async function action(form: FormData) {
   await db.insert(eventSubmissions).values({
     ...entryRequest,
     uploadLink: entryRequest.uploadLink ?? "",
-    eventDate: new Date(entryRequest.eventDate ?? event.date ?? new Date()),
+    eventDate: new Date(entryRequest.eventDate ?? event?.date ?? new Date()),
     officerNotes: "",
     status: entryCode == "" ? "pending" : "auto-approved",
     createdAt: new Date(),

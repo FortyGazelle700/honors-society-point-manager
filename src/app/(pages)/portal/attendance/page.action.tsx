@@ -22,7 +22,7 @@ import { revalidateTag } from "next/cache";
 import { db } from "@/server/db";
 import { events, eventSubmissions, members } from "@/server/db/schema";
 import {
-  getEvents,
+  type getEvents,
   getEventSubmissions,
   getMembers,
   getSession,
@@ -47,10 +47,14 @@ export async function action(form: FormData) {
     return;
   }
 
-  const entryEvents = JSON.parse(String(form.get("events"))) as Events;
-  const entryMembers = JSON.parse(String(form.get("members"))) as Members;
+  const entryEvents = JSON.parse(
+    String(form.get("events") as string),
+  ) as Events;
+  const entryMembers = JSON.parse(
+    String(form.get("members") as string),
+  ) as Members;
   let entrySubmissions = JSON.parse(
-    String(form.get("submissions")),
+    String(form.get("submissions") as string),
   ) as Submissions;
 
   await db.transaction(async (trx) => {
@@ -122,8 +126,8 @@ export async function action(form: FormData) {
           "_",
         )}.${data.firstName.trim().toLowerCase().replaceAll(" ", "_")}`;
 
-      delete (data as any).updatedAt;
-      delete (data as any).createdAt;
+      delete (data as { updatedAt: unknown }).updatedAt;
+      delete (data as { createdAt: unknown }).createdAt;
 
       entrySubmissions = entrySubmissions.map((s) => {
         if (s.memberId == data.id) {
@@ -135,7 +139,7 @@ export async function action(form: FormData) {
         return s;
       });
 
-      delete (data as any).id;
+      delete (data as { id: unknown }).id;
 
       await trx
         .insert(members)
@@ -153,9 +157,9 @@ export async function action(form: FormData) {
       if (data.id == "" || data.date == null) continue;
       const id = new Date(data.date ?? new Date()).toISOString().split("T")[0];
 
-      delete (data as any).id;
-      delete (data as any).updatedAt;
-      delete (data as any).createdAt;
+      delete (data as { id: unknown }).id;
+      delete (data as { updatedAt: unknown }).updatedAt;
+      delete (data as { createdAt: unknown }).createdAt;
 
       await trx
         .insert(events)
@@ -188,8 +192,8 @@ export async function action(form: FormData) {
     for (const data of entrySubmissions) {
       if (data.id == "" || data.id == null) continue;
 
-      delete (data as any).updatedAt;
-      delete (data as any).createdAt;
+      delete (data as { updatedAt: unknown }).updatedAt;
+      delete (data as { createdAt: unknown }).createdAt;
 
       await trx
         .insert(eventSubmissions)

@@ -24,10 +24,8 @@ import {
   CalendarIcon,
   Camera,
   CircleAlert,
-  HelpingHand,
   Info,
   Loader,
-  Music,
   QrCode,
   Check,
   Shuffle,
@@ -36,7 +34,12 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal, useFormStatus } from "react-dom";
 import { toast } from "sonner";
-import { action, SafeEvents, Members, verifyCode } from "./page.action";
+import {
+  action,
+  type SafeEvents,
+  type Members,
+  verifyCode,
+} from "./page.action";
 import { Combobox } from "@/components/ui/combobox";
 import { Textarea } from "@/components/ui/textarea";
 import { cn, getPointConfig } from "@/lib/utils";
@@ -72,7 +75,7 @@ export function EventSubmissionClientPage({
     eventDate: new Date(),
     createdAt: new Date(),
     updatedAt: new Date(),
-    memberId: memberId || "",
+    memberId: memberId ?? "",
   });
   const [code, setCode] = useState("");
   const [submissionType, setSubmissionType] = useState<"photo" | "qr">("photo");
@@ -112,12 +115,11 @@ export function EventSubmissionClientPage({
         evt.dataTransfer!.dropEffect = "none";
       }, 100);
       if (evt.dataTransfer?.items) {
-        for (let i = 0; i < evt.dataTransfer.items.length; i++) {
-          const item = evt.dataTransfer.items[i];
+        for (const item of evt.dataTransfer.items) {
           if (item.kind == "file") {
             const file = item.getAsFile();
-            if (file && file.type.startsWith("image/")) {
-              evt.dataTransfer!.dropEffect = "copy";
+            if (file?.type?.startsWith("image/")) {
+              evt.dataTransfer.dropEffect = "copy";
               return;
             }
           }
@@ -158,7 +160,7 @@ export function EventSubmissionClientPage({
       document.removeEventListener("drop", dropListener);
       document.removeEventListener("dragend", dragendListener);
     };
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     if (request.eventId) {
@@ -174,7 +176,7 @@ export function EventSubmissionClientPage({
         );
       }
     }
-  }, [request.eventId]);
+  }, [events, fileUpload, request.eventId]);
 
   useEffect(() => {
     if (!code) return;
@@ -186,19 +188,21 @@ export function EventSubmissionClientPage({
       verifyCode({
         id: request.eventId,
         code: code,
-      }).then((success) => {
-        if (success) {
-          toast.success("Event Code verified successfully!", {
-            id: "qr-verify",
-          });
-        } else {
-          toast.error("Invalid event code.", {
-            id: "qr-verify",
-          });
-        }
-      });
+      })
+        .then((success) => {
+          if (success) {
+            toast.success("Event Code verified successfully!", {
+              id: "qr-verify",
+            });
+          } else {
+            toast.error("Invalid event code.", {
+              id: "qr-verify",
+            });
+          }
+        })
+        .catch(console.error);
     }, 1000);
-  }, [code]);
+  }, [code, request.eventId]);
 
   useEffect(() => {
     if (!fileInputRef.current) return;
@@ -302,16 +306,18 @@ export function EventSubmissionClientPage({
             onSelect={(val) =>
               setRequest((prev) => ({ ...prev, eventId: val }))
             }
-            groups={getPointConfig()?.map((pt) => ({
-              header: `${pt.name.charAt(0).toUpperCase() + pt.name.slice(1)} Events`,
-              id: pt.id,
-              values: events
-                .filter((e) => e.type == pt.id)
-                .map((e) => ({
-                  id: e.id,
-                  render: e.name,
-                })),
-            })) ?? []}
+            groups={
+              getPointConfig()?.map((pt) => ({
+                header: `${pt.name.charAt(0).toUpperCase() + pt.name.slice(1)} Events`,
+                id: pt.id,
+                values: events
+                  .filter((e) => e.type == pt.id)
+                  .map((e) => ({
+                    id: e.id,
+                    render: e.name,
+                  })),
+              })) ?? []
+            }
             allowCustomOption
             customOptionLabel={(opt) => `Create "${opt}"`}
             className="w-full"
@@ -338,9 +344,7 @@ export function EventSubmissionClientPage({
                 type="button"
                 variant={request.type == pt.id ? "default" : "outline"}
                 className="flex h-36 w-full flex-col items-start justify-end gap-2 rounded-xl border"
-                onClick={() =>
-                  setRequest((prev) => ({ ...prev, type: pt.id }))
-                }
+                onClick={() => setRequest((prev) => ({ ...prev, type: pt.id }))}
                 disabled={!request.eventId}
               >
                 <pt.Icon className="size-10" />
@@ -388,21 +392,21 @@ export function EventSubmissionClientPage({
         </div>
         {(events.find((e) => e.id == request.eventId)?.needsAdditionalInfo ??
           true) && (
-            <label className="flex w-full flex-col gap-2">
-              <span className="text-muted-foreground text-sm">Description</span>
-              <Textarea
-                value={request.description}
-                onChange={(evt) =>
-                  setRequest((prev) => ({
-                    ...prev,
-                    description: evt.target.value,
-                  }))
-                }
-                disabled={!request.eventId}
-                placeholder="e.x. Mean Girls Musicial, PRMS Winter Concert, etc."
-              />
-            </label>
-          )}
+          <label className="flex w-full flex-col gap-2">
+            <span className="text-muted-foreground text-sm">Description</span>
+            <Textarea
+              value={request.description}
+              onChange={(evt) =>
+                setRequest((prev) => ({
+                  ...prev,
+                  description: evt.target.value,
+                }))
+              }
+              disabled={!request.eventId}
+              placeholder="e.x. Mean Girls Musicial, PRMS Winter Concert, etc."
+            />
+          </label>
+        )}
         <div className="flex w-full flex-col gap-2">
           <span className="text-muted-foreground text-sm">Submission Type</span>
           <div className="flex w-full gap-2">
@@ -554,13 +558,13 @@ function SaveButton({ disabled }: { disabled?: boolean }) {
       toast.success("Submitted!", { id: "submit-event" });
       router.push("/app");
     }
-  }, [pending]);
+  }, [pending, router]);
 
   return (
     <Button
       type="submit"
       className="border-primary size-12 border-2"
-      disabled={disabled || pending}
+      disabled={disabled! || pending}
     >
       {pending ? <Loader className="animate-spin" /> : <Check />}
     </Button>

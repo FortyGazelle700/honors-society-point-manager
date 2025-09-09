@@ -44,7 +44,7 @@ export default function AttendanceStartSubmissionClientPage() {
         }}
       />
     ),
-    [],
+    [loading, router],
   );
 
   return (

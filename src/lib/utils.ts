@@ -32,25 +32,36 @@ export function getPointConfig(): {
   minimumPoints: number;
   color: keyof typeof tailwindColors;
 }[] {
-  const config = JSON.parse(process.env.NEXT_PUBLIC_POINT_TYPES ?? "[]");
+  const config = JSON.parse(
+    process.env.NEXT_PUBLIC_POINT_TYPES ?? "[]",
+  ) as Record<string, string>[];
   for (const item of config) {
     if (!item.icon || !item.name || !item.id) {
       throw new Error("Invalid point type configuration");
     }
     try {
       // Dynamically import the icon from lucide-react
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
       const { [item.icon]: Icon } = require("lucide-react");
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       item.Icon = Icon;
-    } catch (e) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_e) {
       throw new Error(`Invalid icon name: ${item.icon}`);
     }
-    if (typeof item.minimumPoints !== "number" || item.minimumPoints < 0) {
-      item.minimumPoints = 0;
+    if (typeof item.minimumPoints != "number" || item.minimumPoints < 0) {
+      item.minimumPoints = 0 as unknown as string;
     }
     if (!item.color || !(item.color in tailwindColors)) {
       item.color = "neutral";
     }
   }
-  return config;
+  return config as unknown as {
+    id: string;
+    name: string;
+    icon: string;
+    Icon: React.JSXElementConstructor<React.SVGProps<SVGSVGElement>>;
+    minimumPoints: number;
+    color: keyof typeof tailwindColors;
+  }[];
 }

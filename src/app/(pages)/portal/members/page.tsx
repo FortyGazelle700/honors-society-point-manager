@@ -17,7 +17,6 @@
  */
 
 import {
-  getConfig,
   getEventSubmissions,
   getMembers,
   getOfficers,
@@ -35,13 +34,11 @@ export default async function MembersPage() {
   const officers = await getOfficers(true);
   const submissions = await getEventSubmissions();
   const session = await getSession();
-  const config = await getConfig();
 
   return (
     <MembersClientPage
       members={members}
       submissions={submissions}
-      config={config}
       self={officers.find((o) => o.email == session!.user.email)!}
     />
   );

@@ -22,7 +22,7 @@ import { revalidateTag } from "next/cache";
 import { db } from "@/server/db";
 import { members, user } from "@/server/db/schema";
 import { getMembers, getSession } from "@/server/api";
-import { and, eq, inArray, not, or, sql } from "drizzle-orm";
+import { and, eq, inArray, not } from "drizzle-orm";
 
 export type Members = Awaited<ReturnType<typeof getMembers>>;
 
@@ -42,7 +42,9 @@ export async function action(form: FormData) {
 
   await db.transaction(async (trx) => {
     const idsInForm = new Set<string>();
-    for (const data of JSON.parse(String(form.get("officers"))) as Members) {
+    for (const data of JSON.parse(
+      String(form.get("officers") as string),
+    ) as Members) {
       const generatedId = `staff_${data.email?.split("@")[0]}`;
       const idToUse =
         !data.id.startsWith("staff_") && memberList.find((m) => m.id == data.id)
@@ -80,7 +82,7 @@ export async function action(form: FormData) {
       }
     }
 
-    const updates = await trx
+    await trx
       .update(members)
       .set({
         email: "",
@@ -114,11 +116,13 @@ export async function action(form: FormData) {
       await trx.delete(user).where(eq(user.email, member.email ?? ""));
     }
 
-    for (const data of JSON.parse(String(form.get("officers"))) as Members) {
+    for (const data of JSON.parse(
+      String(form.get("officers") as string),
+    ) as Members) {
       if (data.id == "" || data.roleName == "") continue;
 
-      delete (data as any).updatedAt;
-      delete (data as any).createdAt;
+      delete (data as { updatedAt: unknown }).updatedAt;
+      delete (data as { createdAt: unknown }).createdAt;
 
       const generatedId = `staff_${data.email?.split("@")[0]}`;
 

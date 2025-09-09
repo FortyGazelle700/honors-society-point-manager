@@ -45,9 +45,11 @@ export async function action(form: FormData) {
 
   const submissions = await getEventSubmissions();
 
-  const entryMembers = JSON.parse(String(form.get("members"))) as Members;
+  const entryMembers = JSON.parse(
+    String(form.get("members") as string),
+  ) as Members;
   const entryPointBoost = JSON.parse(
-    String(form.get("pointBoosts")),
+    String(form.get("pointBoosts") as string),
   ) as PointBoost;
 
   await db.transaction(async (trx) => {
@@ -97,9 +99,9 @@ export async function action(form: FormData) {
           "_",
         )}.${data.firstName.trim().toLowerCase().replaceAll(" ", "_")}`;
 
-      delete (data as any).id;
-      delete (data as any).updatedAt;
-      delete (data as any).createdAt;
+      delete (data as { id: unknown }).id;
+      delete (data as { updatedAt: unknown }).updatedAt;
+      delete (data as { createdAt: unknown }).createdAt;
 
       await trx
         .insert(members)
@@ -130,7 +132,7 @@ export async function action(form: FormData) {
   await db.transaction(async (trx) => {
     for (const [member, values] of Object.entries(entryPointBoost)) {
       for (const [type, value] of Object.entries(values)) {
-        let currentBoosts = submissions.filter(
+        const currentBoosts = submissions.filter(
           (s) =>
             s.eventId == "<point_boost>" &&
             s.memberId == member &&

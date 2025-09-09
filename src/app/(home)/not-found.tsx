@@ -30,8 +30,8 @@ export default async function NotFoundPage() {
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-bold">Page not found :/</h1>
         <p className="text-muted-foreground">
-          Hmm, seems like that page doesn't exist, maybe try going back to the
-          home page?
+          Hmm, seems like that page doesn{"'"}t exist, maybe try going back to
+          the home page?
         </p>
       </div>
       <div className="flex items-center gap-2">

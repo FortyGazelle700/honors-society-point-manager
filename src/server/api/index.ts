@@ -17,7 +17,7 @@
  */
 
 import { db } from "@/server/db";
-import { config, events, eventSubmissions, members } from "@/server/db/schema";
+import { events, eventSubmissions, members } from "@/server/db/schema";
 import { not, eq, and, gte } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { auth } from "@/server/auth";

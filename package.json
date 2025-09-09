@@ -29,6 +29,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.44.4",
+    "eslint-plugin-drizzle": "^0.2.3",
     "fuse.js": "^7.1.0",
     "lucide-react": "^0.539.0",
     "motion": "^12.23.12",
@@ -44,6 +45,7 @@
     "server-only": "^0.0.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
+    "typescript-eslint": "^8.43.0",
     "vaul": "^1.1.2"
   },
   "devDependencies": {

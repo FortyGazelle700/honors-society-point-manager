@@ -28,7 +28,6 @@ import {
   ShieldUser,
   UserRound,
   UsersRound,
-  Wrench,
 } from "lucide-react";
 import { SignOutButton } from "./layout.client";
 import type { Metadata } from "next";
@@ -65,7 +64,7 @@ export default async function PortalPage() {
           </span>
           <span className="flex items-center text-xs">
             {(await getRole(session!.user.email)) ==
-              (await getRoleName(session!.user.email)) ? (
+            (await getRoleName(session!.user.email)) ? (
               <>{await getRole(session!.user.email)}</>
             ) : (
               <>

@@ -20,43 +20,35 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   ArrowLeft,
-  CalendarIcon,
   Check,
   CheckCheck,
-  CheckCircle,
-  CircleAlert,
   CircleCheck,
-  CircleSlash,
   Dot,
-  Eraser,
   ExternalLink,
   Image,
   ListChecks,
   Loader,
   Minus,
-  MoreHorizontal,
-  Printer,
-  QrCode,
-  RefreshCw,
   Save,
-  Search,
   Slash,
   Text,
-  Trash,
   TriangleAlert,
-  UsersRound,
   X,
 } from "lucide-react";
-import { action, Events, Members, Submissions } from "./page.action";
+import {
+  action,
+  type Events,
+  type Members,
+  type Submissions,
+} from "./page.action";
 import { useFormStatus } from "react-dom";
-import Fuse from "fuse.js";
 
 import {
-  Dispatch,
-  SetStateAction,
+  type Dispatch,
+  type SetStateAction,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -69,12 +61,6 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select";
-import {
   ResponsivePopover,
   ResponsivePopoverBody,
   ResponsivePopoverClose,
@@ -84,16 +70,8 @@ import {
   ResponsivePopoverTitle,
   ResponsivePopoverTrigger,
 } from "@/components/ui/responsive-popover";
-import { Checkbox } from "@/components/ui/checkbox";
 import { cn, getPointConfig } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import QRCode from "react-qr-code";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -101,32 +79,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-function randomCode() {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let code = "";
-  for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-}
-
-function emptyEvent(): Events[number] {
-  return {
-    id: crypto.randomUUID(),
-    name: "",
-    date: null,
-    location: "",
-    hasQrSubmission: false,
-    needsAdditionalInfo: false,
-    notes: "",
-    type: "",
-    verificationCode: randomCode(),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-}
 
 export default function SubmissionsClientPage({
   members,
@@ -221,9 +173,7 @@ export default function SubmissionsClientPage({
 
 function SingleUI({
   members,
-  self,
   events,
-  defaultSubmisisons,
   submissions,
   setSubmissions,
 }: {
@@ -246,6 +196,41 @@ function SingleUI({
   const lastPosX = useRef<number | null>(null);
   const runningAnimation = useRef(false);
 
+  const move = useCallback(
+    (pos: number) => {
+      if (runningAnimation.current) return;
+      runningAnimation.current = true;
+      setIsActive(false);
+      if (releaseDebounce.current) clearInterval(releaseDebounce.current);
+
+      const startTime = Date.now();
+      const duration = 1000;
+      const startPos = posX;
+      const targetPos = pos;
+      const distance = targetPos - startPos;
+
+      const easeInOut = (t: number): number => {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      };
+
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easedProgress = easeInOut(progress);
+
+        const currentPos = startPos + distance * easedProgress;
+        setPosX(currentPos);
+
+        if (progress >= 1) {
+          clearInterval(interval);
+          runningAnimation.current = false;
+          setOverride(true);
+        }
+      }, 16); // ~60fps
+    },
+    [posX],
+  );
+
   useEffect(() => {
     if (runningAnimation.current) return;
     if (Math.abs(posX) <= 0.1 && posX != 0) {
@@ -256,7 +241,7 @@ function SingleUI({
   useEffect(() => {
     const mouseup = async (evt: MouseEvent | TouchEvent | null) => {
       if (runningAnimation.current) return;
-      let touch = evt?.type.startsWith("touch");
+      const touch = evt?.type.startsWith("touch");
       lastPosX.current = null;
       if (
         !deleteModal &&
@@ -281,9 +266,7 @@ function SingleUI({
       }
 
       if (Math.abs(posX) >= 100) {
-        const submission = submissions.find(
-          (s) => s.status == "pending",
-        ) as Submissions[number];
+        const submission = submissions.find((s) => s.status == "pending")!;
 
         const wasApproved = posX > 0;
 
@@ -380,7 +363,7 @@ function SingleUI({
 
     const mousemove = (evt: MouseEvent | TouchEvent) => {
       if (deleteModal || runningAnimation.current) return;
-      let touch = evt.type.startsWith("touch");
+      const touch = evt.type.startsWith("touch");
       if (touch) {
         setTouch(true);
         setTimeout(() => {
@@ -413,10 +396,10 @@ function SingleUI({
       if (deleteModal) {
         if ((isMacOS() ? evt.metaKey : evt.ctrlKey) && evt.key == "Enter") {
           isDeleting.current = true;
-          mouseup(null);
+          mouseup(null).catch(console.error);
         } else if (evt.key == "Escape") {
           isDeleting.current = false;
-          mouseup(null);
+          mouseup(null).catch(console.error);
           setTimeout(() => move(0), 100);
         }
         return;
@@ -449,15 +432,19 @@ function SingleUI({
     };
 
     if (override) {
-      mouseup(null);
+      mouseup(null).catch(console.error);
     }
 
     document.body.addEventListener("mousedown", mousemove);
     document.body.addEventListener("touchstart", mousemove);
     document.body.addEventListener("mousemove", mousemove);
     document.body.addEventListener("touchmove", mousemove);
-    document.body.addEventListener("mouseup", mouseup);
-    document.body.addEventListener("touchend", mouseup);
+    document.body.addEventListener("mouseup", () => {
+      mouseup(null).catch(console.error);
+    });
+    document.body.addEventListener("touchend", () => {
+      mouseup(null).catch(console.error);
+    });
     document.body.addEventListener("keydown", keypress);
 
     return () => {
@@ -465,43 +452,24 @@ function SingleUI({
       document.body.removeEventListener("touchstart", mousemove);
       document.body.removeEventListener("mousemove", mousemove);
       document.body.removeEventListener("touchmove", mousemove);
-      document.body.removeEventListener("mouseup", mouseup);
-      document.body.removeEventListener("touchend", mouseup);
+      document.body.removeEventListener("mouseup", () => {
+        mouseup(null).catch(console.error);
+      });
+      document.body.removeEventListener("touchend", () => {
+        mouseup(null).catch(console.error);
+      });
       document.body.removeEventListener("keydown", keypress);
     };
-  }, [isActive, posX, submissions, setSubmissions, override]);
-
-  function move(pos: number) {
-    if (runningAnimation.current) return;
-    runningAnimation.current = true;
-    setIsActive(false);
-    if (releaseDebounce.current) clearInterval(releaseDebounce.current);
-
-    const startTime = Date.now();
-    const duration = 1000;
-    const startPos = posX;
-    const targetPos = pos;
-    const distance = targetPos - startPos;
-
-    const easeInOut = (t: number): number => {
-      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    };
-
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const easedProgress = easeInOut(progress);
-
-      const currentPos = startPos + distance * easedProgress;
-      setPosX(currentPos);
-
-      if (progress >= 1) {
-        clearInterval(interval);
-        runningAnimation.current = false;
-        setOverride(true);
-      }
-    }, 16); // ~60fps
-  }
+  }, [
+    isActive,
+    posX,
+    submissions,
+    setSubmissions,
+    override,
+    deleteModal,
+    deletingPos,
+    move,
+  ]);
 
   function Card({
     children,
@@ -854,28 +822,44 @@ function SingleUI({
               <EmptyCard key={"empty"} id={"card-empty"} />,
             ]
               .filter((_, i) => i < 3)
-              .map(({ type: Component, key, props: props }, idx) => (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  key={props.id}
-                  className="@container aspect-[9/16] min-h-0 w-[min(80vw,40vh,25rem)]"
-                >
-                  <Component
-                    {...props}
+              .map(
+                (
+                  {
+                    type: Component,
+                    key,
+                    props: props,
+                  }: {
+                    type: React.ElementType;
+                    key: string | null;
+                    props: React.ComponentPropsWithoutRef<React.ElementType> & {
+                      style?: React.CSSProperties;
+                    };
+                  },
+                  idx,
+                ) => (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     key={key}
-                    isActive={idx == 0}
-                    style={{
-                      ...props.style,
-                      position: "relative",
-                      transform: `scale(${100 - 5 * Math.max(0, idx - softClamp(Math.abs(posX), -100, 100, -200, 200, 0.1) / 100)}%)`,
-                      bottom: `${4 * Math.pow(Math.max(0, idx - softClamp(Math.abs(posX), -100, 100, -200, 200, 0.1) / 100), 1 / 1.2)}cqh`,
-                      transition: "all 0.4s",
-                    }}
-                  />
-                </motion.div>
-              ))
+                    className="@container aspect-[9/16] min-h-0 w-[min(80vw,40vh,25rem)]"
+                  >
+                    <Component
+                      {...props}
+                      key={key}
+                      isActive={idx == 0}
+                      style={{
+                        // eslint-disable-next-line react/prop-types
+                        ...(props.style ?? {}),
+                        position: "relative",
+                        transform: `scale(${100 - 5 * Math.max(0, idx - softClamp(Math.abs(posX), -100, 100, -200, 200, 0.1) / 100)}%)`,
+                        bottom: `${4 * Math.pow(Math.max(0, idx - softClamp(Math.abs(posX), -100, 100, -200, 200, 0.1) / 100), 1 / 1.2)}cqh`,
+                        transition: "all 0.4s",
+                      }}
+                    />
+                  </motion.div>
+                ),
+              )
               .toReversed()}
           </div>
         </div>
@@ -908,7 +892,7 @@ function ListUI({
   // Helper to get event name
   function getEventName(eventId: string) {
     return (
-      events.find((e) => e.id == eventId)?.name || eventId || "Unknown Event"
+      events.find((e) => e.id == eventId)?.name ?? eventId ?? "Unknown Event"
     );
   }
 
@@ -1048,7 +1032,7 @@ function ListUI({
                             isRejected && "border-red-600 bg-red-800",
                             isPending && "border-yellow-600 bg-yellow-800",
                             submission.status == "cancelled" &&
-                            "border-gray-600 bg-gray-800",
+                              "border-gray-600 bg-gray-800",
                           )}
                         >
                           <div
@@ -1109,9 +1093,7 @@ function ListUI({
                           </ResponsivePopoverHeader>
                           <ResponsivePopoverBody>
                             <div className="text-sm whitespace-pre-line">
-                              {submission.description ? (
-                                submission.description
-                              ) : (
+                              {submission.description ?? (
                                 <span className="text-muted-foreground italic">
                                   No description provided.
                                 </span>
@@ -1195,15 +1177,15 @@ function ListUI({
                             onClick={
                               defaultStatus == "pending" && isRejected
                                 ? () => {
-                                  // Set back to pending/default
-                                  setSubmissions((subs) =>
-                                    subs.map((sub) =>
-                                      sub.id == submission.id
-                                        ? { ...sub, status: "pending" }
-                                        : sub,
-                                    ),
-                                  );
-                                }
+                                    // Set back to pending/default
+                                    setSubmissions((subs) =>
+                                      subs.map((sub) =>
+                                        sub.id == submission.id
+                                          ? { ...sub, status: "pending" }
+                                          : sub,
+                                      ),
+                                    );
+                                  }
                                 : undefined
                             }
                           >
@@ -1229,15 +1211,15 @@ function ListUI({
                               <div className="flex flex-col gap-4">
                                 <Textarea
                                   placeholder="Optional: Add a reason for rejection"
-                                  value={submission.officerNotes || ""}
+                                  value={(submission.officerNotes ?? "") || ""}
                                   onChange={(e) => {
                                     setSubmissions((subs) =>
                                       subs.map((sub) =>
                                         sub.id == submission.id
                                           ? {
-                                            ...sub,
-                                            officerNotes: e.target.value,
-                                          }
+                                              ...sub,
+                                              officerNotes: e.target.value,
+                                            }
                                           : sub,
                                       ),
                                     );
@@ -1290,24 +1272,24 @@ function ListUI({
                         onClick={
                           submission.status == "approved"
                             ? () => {
-                              // Set back to pending/default
-                              setSubmissions((subs) =>
-                                subs.map((sub) =>
-                                  sub.id == submission.id
-                                    ? { ...sub, status: "pending" }
-                                    : sub,
-                                ),
-                              );
-                            }
+                                // Set back to pending/default
+                                setSubmissions((subs) =>
+                                  subs.map((sub) =>
+                                    sub.id == submission.id
+                                      ? { ...sub, status: "pending" }
+                                      : sub,
+                                  ),
+                                );
+                              }
                             : () => {
-                              setSubmissions((subs) =>
-                                subs.map((sub) =>
-                                  sub.id == submission.id
-                                    ? { ...sub, status: "approved" }
-                                    : sub,
-                                ),
-                              );
-                            }
+                                setSubmissions((subs) =>
+                                  subs.map((sub) =>
+                                    sub.id == submission.id
+                                      ? { ...sub, status: "approved" }
+                                      : sub,
+                                  ),
+                                );
+                              }
                         }
                         disabled={
                           self.role != "owner" &&
@@ -1316,7 +1298,7 @@ function ListUI({
                         }
                       >
                         {defaultStatus == "pending" &&
-                          submission.status == "approved" ? (
+                        submission.status == "approved" ? (
                           <Minus />
                         ) : (
                           <Check />

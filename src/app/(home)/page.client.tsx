@@ -82,7 +82,7 @@ export function ContinueButton({
   const router = useRouter();
 
   const [defaultMember, setDefaultMember] = useState<Members[number] | null>(
-    membersList.find((m) => m.id == defaultMemberId) || null,
+    membersList.find((m) => m.id == defaultMemberId) ?? null,
   );
 
   // Cookie helper functions
@@ -91,12 +91,12 @@ export function ContinueButton({
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length == 2) {
-      return parts.pop()?.split(";").shift() || null;
+      return parts.pop()?.split(";").shift() ?? null;
     }
     return null;
   };
 
-  const setCookie = (name: string, value: string, days: number = 30): void => {
+  const setCookie = (name: string, value: string, days = 30): void => {
     if (typeof document == "undefined") return;
     const expires = new Date();
     expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
@@ -239,7 +239,9 @@ export function ContinueButton({
               {members.length == 0 ? (
                 <div className="flex items-center justify-center gap-2 p-4">
                   <span className="text-muted-foreground text-center text-xs">
-                    No participants found matching "{search}"
+                    No participants found matching {'"'}
+                    {search}
+                    {'"'}
                   </span>
                 </div>
               ) : (

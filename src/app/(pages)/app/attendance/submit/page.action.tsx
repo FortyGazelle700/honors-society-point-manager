@@ -18,7 +18,7 @@
 
 "use server";
 
-import { getMembers, getEvents, getEventSubmissions } from "@/server/api";
+import { type getMembers, getEvents, getEventSubmissions } from "@/server/api";
 import { db } from "@/server/db";
 import { eventSubmissions } from "@/server/db/schema";
 import { revalidateTag } from "next/cache";
@@ -41,15 +41,13 @@ export async function verifyCode({ id, code }: { id: string; code: string }) {
 
 export async function action(form: FormData) {
   const entryRequest = JSON.parse(
-    String(form.get("request")),
+    String(form.get("request") as string),
   ) as Submissions[number];
   const entryCode = form.get("code") as string | null;
 
   const events = await getEvents();
   const submissions = await getEventSubmissions();
-  const event = events.find(
-    (e) => e.id == entryRequest.eventId,
-  ) as Events[number];
+  const event = events.find((e) => e.id == entryRequest.eventId);
 
   if (entryCode == "") {
     console.error("Attendance code is empty");
@@ -84,7 +82,7 @@ export async function action(form: FormData) {
   await db.insert(eventSubmissions).values({
     ...entryRequest,
     uploadLink: entryRequest.uploadLink ?? "",
-    eventDate: new Date(entryRequest.eventDate ?? event.date ?? new Date()),
+    eventDate: new Date(entryRequest.eventDate ?? event?.date ?? new Date()),
     officerNotes: "",
     status: "auto-approved",
     type: "attendance",

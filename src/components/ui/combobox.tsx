@@ -118,14 +118,16 @@ export function Combobox({
     allowCustomOption &&
     inputValue.trim().length > 0 &&
     !allOptionIds.includes(inputValue.trim()) &&
-    !(restrictCustomOption && restrictCustomOption(inputValue.trim()));
+    !restrictCustomOption?.(inputValue.trim());
 
   // Render label for custom option
   const customOptionRender = customOptionLabel ? (
     customOptionLabel(inputValue.trim())
   ) : (
     <>
-      Add "<span className="font-semibold">{inputValue.trim()}</span>"
+      Add {'"'}
+      <span className="font-semibold">{inputValue.trim()}</span>
+      {'"'}
     </>
   );
 

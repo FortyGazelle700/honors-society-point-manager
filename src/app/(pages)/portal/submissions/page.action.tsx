@@ -101,7 +101,8 @@ export async function action(form: FormData) {
 
       if (
         !cannotChangeStatus &&
-        submissions.find((s) => s.id == data.id)?.uploadLink
+        submissions.find((s) => s.id == data.id)?.uploadLink &&
+        data.status != "pending"
       ) {
         await s3.send(
           new DeleteObjectCommand({

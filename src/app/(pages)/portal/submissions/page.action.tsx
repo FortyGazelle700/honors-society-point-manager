@@ -95,7 +95,8 @@ export async function action(form: FormData) {
             }
           })(),
           updatedAt: new Date(),
-          uploadLink: "",
+          uploadLink:
+            data.status == "pending" ? eventSubmissions.uploadLink : "",
         })
         .where(eq(eventSubmissions.id, data.id));
 

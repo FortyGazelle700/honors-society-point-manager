@@ -18,6 +18,8 @@
 
 import { unstable_cache } from "next/cache";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import heicConvert from "heic-convert";
+import sharp from "sharp";
 
 export async function GET(
   request: Request,
@@ -32,7 +34,7 @@ export async function GET(
         },
         endpoint: process.env.S3_ENDPOINT,
         region: process.env.S3_REGION,
-        forcePathStyle: true, // Required for custom S3-compatible endpoints
+        forcePathStyle: true,
       });
 
       const command = new GetObjectCommand({
@@ -43,20 +45,51 @@ export async function GET(
       const s3Response = await s3Client.send(command);
 
       if (!s3Response.Body) {
-        throw new Error("File not found");
+        return new Response("File not found", { status: 404 });
       }
 
-      return new Response(s3Response.Body as ReadableStream, {
+      // Collect buffer once
+      const chunks: Uint8Array[] = [];
+      for await (const chunk of s3Response.Body as AsyncIterable<Uint8Array>) {
+        chunks.push(chunk);
+      }
+      const inputBuffer = Buffer.concat(chunks);
+
+      let pngBuffer: Buffer;
+
+      if (
+        s3Response.ContentType == "image/heic" ||
+        s3Response.ContentType == "image/heif"
+      ) {
+        // Convert HEIC/HEIF with heic-convert
+        pngBuffer = Buffer.from(
+          await heicConvert({
+            buffer: inputBuffer as unknown as ArrayBufferLike,
+            format: "PNG",
+            quality: 1,
+          }),
+        );
+      } else if (s3Response.ContentType == "image/png") {
+        pngBuffer = await sharp(inputBuffer, {
+          autoOrient: true,
+        })
+          .png()
+          .toBuffer();
+      } else {
+        pngBuffer = inputBuffer;
+      }
+
+      return new Response(Buffer.from(pngBuffer), {
         headers: {
           "Cache-Control": "public, max-age=31536000, immutable",
-          "Content-Type": s3Response.ContentType ?? "application/octet-stream",
-          "Content-Length": s3Response.ContentLength?.toString() ?? "",
+          "Content-Type": "image/png",
+          "Content-Length": pngBuffer.length.toString(),
         },
       });
     },
     [(await params).file],
     {
-      revalidate: 31536000, // 1 year
+      revalidate: 31536000,
       tags: ["db:events:submissions"],
     },
   )();

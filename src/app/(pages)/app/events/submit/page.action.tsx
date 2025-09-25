@@ -24,6 +24,8 @@ import { eventSubmissions } from "@/server/db/schema";
 import { revalidateTag } from "next/cache";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getPointConfig } from "@/lib/utils";
+import heicConvert from "heic-convert";
+import sharp from "sharp";
 
 export type Members = Awaited<ReturnType<typeof getMembers>>;
 export type Events = Awaited<ReturnType<typeof getEvents>>;
@@ -105,18 +107,35 @@ export async function action(form: FormData) {
     const fileId = `${randomUUID()}.png`;
 
     try {
-      // Convert to Uint8Array instead of Buffer for better compatibility
-      const fileBuffer = await entryFile.arrayBuffer();
-      const fileData = new Uint8Array(fileBuffer);
+      // Load file into memory
+      const fileBuffer = Buffer.from(await entryFile.arrayBuffer());
 
-      // Upload to S3
+      let pngBuffer: Buffer;
+
+      if (entryFile.type === "image/heic" || entryFile.type === "image/heif") {
+        // Convert HEIC/HEIF -> PNG
+        pngBuffer = Buffer.from(
+          await heicConvert({
+            buffer: fileBuffer as unknown as ArrayBufferLike,
+            format: "PNG",
+            quality: 1,
+          }),
+        );
+      } else {
+        // Use sharp for all other images -> PNG
+        pngBuffer = await sharp(fileBuffer, { animated: true })
+          .png({ compressionLevel: 9 })
+          .toBuffer();
+      }
+
+      // Upload PNG only
       await s3.send(
         new PutObjectCommand({
           Bucket: process.env.S3_BUCKET!,
           Key: fileId,
-          Body: fileData, // Use Uint8Array instead of Buffer
-          ContentType: entryFile.type,
-          ContentLength: entryFile.size, // Explicitly set content length
+          Body: pngBuffer,
+          ContentType: "image/png",
+          ContentLength: pngBuffer.length,
         }),
       );
 

@@ -23,12 +23,12 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
   Check,
-  CheckCheck,
+  // CheckCheck,
   CircleCheck,
   Dot,
   ExternalLink,
   Image,
-  ListChecks,
+  // ListChecks,
   Loader,
   Minus,
   Save,
@@ -93,8 +93,8 @@ export default function SubmissionsClientPage({
   submissions: Submissions;
   searchParams: Record<string, string | undefined>;
 }) {
-  const [view, setView] = useState<"single" | "list">(
-    searchParams.view == "list" ? "list" : "single",
+  const [view, _setView] = useState<"single" | "list">(
+    (searchParams.view ?? "list") == "list" ? "list" : "single",
   );
   const [submissions, setSubmissions] = useState(defaultSubmisisons);
 
@@ -116,7 +116,6 @@ export default function SubmissionsClientPage({
           >
             <ArrowLeft />
           </Button>
-          <div className="w-12" />
         </div>
         <span className="flex items-center gap-2">
           <span className="hidden items-center gap-2 md:flex">
@@ -125,7 +124,7 @@ export default function SubmissionsClientPage({
           Submissions
         </span>
         <div className="flex items-center gap-2">
-          <Button
+          {/*<Button
             variant="secondary"
             className="size-12 border-2"
             onClick={() => {
@@ -133,7 +132,7 @@ export default function SubmissionsClientPage({
             }}
           >
             {view == "single" ? <ListChecks /> : <CheckCheck />}
-          </Button>
+          </Button>*/}
           <SaveButton
             disabled={(() => {
               return false;

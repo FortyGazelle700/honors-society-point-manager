@@ -137,9 +137,16 @@ export default function MembersClientPage({
 
   async function handlePaste(el: HTMLInputElement) {
     const value = await navigator.clipboard.readText();
-    if (el.value == value || (!value.includes("\n") && !value.includes("\t")))
+    if (
+      el.value == value ||
+      (!value.includes("\n") && !(value.includes("\t") || value.includes(" ")))
+    )
       return;
-    const table = value.split("\n").map((row) => row.split("\t"));
+    const table = value
+      .split("\n")
+      .map((row) =>
+        row.split("\t").length > 1 ? row.split("\t") : row.split(" "),
+      );
 
     const newMembers = members.slice(0, -1);
 

@@ -26,6 +26,7 @@ import { Heart, Instagram } from "lucide-react";
 
 export const metadata: Metadata = {
   title: `Home | ${process.env.APPLICATION_NAME ?? "Honors Society Point Manager"}`,
+  icons: process.env.FAVICON_IMAGE,
 };
 
 export type Members = Awaited<ReturnType<typeof getMembers>>;

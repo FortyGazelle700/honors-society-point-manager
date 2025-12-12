@@ -213,8 +213,11 @@ export default function MembersClientPage({
           <div className="flex gap-2" key={String(member.id)} id={member.id}>
             <div className="flex flex-1 flex-col items-center gap-2 md:flex-row">
               <Popover>
-                <PopoverTrigger className="mr-auto">
-                  <div className="flex cursor-pointer items-center gap-2">
+                <PopoverTrigger className="mr-auto" asChild>
+                  <button
+                    type="button"
+                    className="flex cursor-pointer items-center gap-2"
+                  >
                     {getPointConfig().map(({ id: type, Icon }) => (
                       <div
                         className={cn(
@@ -246,63 +249,84 @@ export default function MembersClientPage({
                         <Icon className="size-4" />
                       </div>
                     ))}
-                  </div>
+                  </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[40ch]">
-                  <div className="flex flex-col gap-2">
-                    {getPointConfig().map(({ id: type }) => (
-                      <div className="flex items-center gap-2" key={type}>
-                        <PercentageChart
-                          percent={
-                            (submissions.filter(
+                <PopoverContent className="w-[30ch]">
+                  <div className="flex flex-col gap-4">
+                    {getPointConfig().map(({ id: type, Icon }) => (
+                      <div className="flex flex-col" key={type}>
+                        <div className="flex items-center gap-2">
+                          <PercentageChart
+                            percent={
+                              (submissions.filter(
+                                (s) =>
+                                  s.memberId == member.id &&
+                                  s.type == type &&
+                                  s.eventId != "<point_boost>" &&
+                                  (s.status == "approved" ||
+                                    s.status == "auto-approved"),
+                              ).length +
+                                (pointBoosts[member.id]?.[type] ?? 0)) /
+                              Number(
+                                config.find((c) => c.id == type)
+                                  ?.minimumPoints ?? 1,
+                              )
+                            }
+                          />
+                          <span className="flex flex-1 items-center gap-2">
+                            <Icon className="size-4" />
+                            {toProperCase(type)} Points
+                          </span>
+                        </div>
+                        <div className="ml-auto flex items-center gap-2">
+                          <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                            {submissions.filter(
                               (s) =>
                                 s.memberId == member.id &&
                                 s.type == type &&
                                 s.eventId != "<point_boost>" &&
                                 (s.status == "approved" ||
                                   s.status == "auto-approved"),
-                            ).length +
-                              (pointBoosts[member.id]?.[type] ?? 0)) /
-                            Number(
+                            ).length + (pointBoosts[member.id]?.[type] ?? 0)}
+                            {submissions.filter(
+                              (s) =>
+                                s.memberId == member.id &&
+                                s.type == type &&
+                                s.status == "pending",
+                            ).length != 0 &&
+                              ` (${
+                                submissions.filter(
+                                  (s) =>
+                                    s.memberId == member.id &&
+                                    s.type == type &&
+                                    s.eventId != "<point_boost>" &&
+                                    s.status != "approved" &&
+                                    s.status != "auto-approved",
+                                ).length
+                              } pending)`}
+                            <Slash className="size-3" />{" "}
+                            {Number(
                               config.find((c) => c.id == type)?.minimumPoints ??
                                 1,
-                            )
-                          }
-                        />
-                        <span className="flex-1">
-                          {toProperCase(type)} Points
-                        </span>
-                        <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                          {submissions.filter(
-                            (s) =>
-                              s.memberId == member.id &&
-                              s.type == type &&
-                              s.eventId != "<point_boost>" &&
-                              (s.status == "approved" ||
-                                s.status == "auto-approved"),
-                          ).length + (pointBoosts[member.id]?.[type] ?? 0)}
-                          <Slash className="size-3" />{" "}
-                          {Number(
-                            config.find((c) => c.id == type)?.minimumPoints ??
-                              1,
-                          )}
-                        </span>
-                        <Input
-                          value={pointBoosts[member.id]?.[type] ?? 0}
-                          onChange={(evt) => {
-                            setPointBoosts((prev) => ({
-                              ...prev,
-                              [member.id]: {
-                                ...prev[member.id],
-                                [type]: Number(evt.target.value),
-                              },
-                            }));
-                          }}
-                          type="number"
-                          className="w-[10ch]"
-                          min={0}
-                          max={5}
-                        />
+                            )}
+                          </span>
+                          <Input
+                            value={pointBoosts[member.id]?.[type] ?? 0}
+                            onChange={(evt) => {
+                              setPointBoosts((prev) => ({
+                                ...prev,
+                                [member.id]: {
+                                  ...prev[member.id],
+                                  [type]: Number(evt.target.value),
+                                },
+                              }));
+                            }}
+                            type="number"
+                            className="w-[10ch]"
+                            min={0}
+                            max={5}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -349,6 +373,7 @@ export default function MembersClientPage({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
+                  type="button"
                   onClick={() => {
                     setMembers((prev) =>
                       prev.map((o) =>
@@ -405,6 +430,7 @@ export default function MembersClientPage({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    type="button"
                     variant="destructive"
                     size="icon"
                     onClick={() => {
@@ -433,6 +459,7 @@ export default function MembersClientPage({
                 <TooltipTrigger asChild>
                   <span>
                     <Button
+                      type="button"
                       variant="destructive"
                       size="icon"
                       onClick={() => {

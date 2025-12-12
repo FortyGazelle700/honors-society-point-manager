@@ -18,7 +18,6 @@
 
 import { unstable_cache } from "next/cache";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import heicConvert from "heic-convert";
 import sharp from "sharp";
 
 export async function GET(
@@ -62,6 +61,7 @@ export async function GET(
         s3Response.ContentType == "image/heif"
       ) {
         // Convert HEIC/HEIF with heic-convert
+        const heicConvert = (await import("heic-convert")).default;
         pngBuffer = Buffer.from(
           await heicConvert({
             buffer: inputBuffer as unknown as ArrayBufferLike,

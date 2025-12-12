@@ -193,6 +193,7 @@ export function EventSubmissionClientPage({
           <Popover>
             <PopoverTrigger asChild>
               <Button
+                type="button"
                 variant="outline"
                 data-empty={!request.eventDate}
                 className="data-[empty=true]:text-muted-foreground h-9 flex-1 justify-start text-left font-normal"

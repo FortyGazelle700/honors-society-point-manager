@@ -260,6 +260,7 @@ export default function OfficersClientPage({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
+                      type="button"
                       variant="destructive"
                       size="icon"
                       onClick={() => {
@@ -286,6 +287,7 @@ export default function OfficersClientPage({
                   <TooltipTrigger asChild>
                     <span>
                       <Button
+                        type="button"
                         variant="destructive"
                         size="icon"
                         onClick={() => {

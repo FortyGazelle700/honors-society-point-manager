@@ -202,6 +202,7 @@ export default function AttendanceClientPage({
               <ResponsivePopover>
                 <ResponsivePopoverTrigger asChild>
                   <Button
+                    type="button"
                     variant="outline"
                     data-empty={!event.date}
                     className="data-[empty=true]:text-muted-foreground h-9 w-[calc(100%-theme(spacing.4))] flex-1 justify-start text-left font-normal"
@@ -239,7 +240,7 @@ export default function AttendanceClientPage({
                 {event.hasQrSubmission && (
                   <ResponsivePopover>
                     <ResponsivePopoverTrigger asChild>
-                      <Button variant="outline" size="icon">
+                      <Button type="button" variant="outline" size="icon">
                         <QrCode />
                       </Button>
                     </ResponsivePopoverTrigger>
@@ -256,6 +257,7 @@ export default function AttendanceClientPage({
                       />
                       <div className="flex items-center justify-end gap-2 pt-4">
                         <Button
+                          type="button"
                           variant="secondary"
                           href={`/qr?value=${encodeURIComponent(qrURL.toString())}&code=${encodeURIComponent(event.verificationCode ?? "")}&label=${encodeURIComponent(new Date(event.date ?? new Date())?.toDateString() ?? "")}&print=true`}
                           onClick={(evt) => {
@@ -270,6 +272,7 @@ export default function AttendanceClientPage({
                           Print <Printer className="size-4" />
                         </Button>
                         <Button
+                          type="button"
                           href={`/qr?value=${encodeURIComponent(qrURL.toString())}&code=${encodeURIComponent(event.verificationCode ?? "")}&label=${encodeURIComponent(new Date(event.date ?? new Date())?.toDateString() ?? "")}`}
                           onClick={(evt) => {
                             evt.preventDefault();
@@ -288,7 +291,7 @@ export default function AttendanceClientPage({
                 )}
                 <ResponsivePopover>
                   <ResponsivePopoverTrigger asChild>
-                    <Button variant="outline" size="icon">
+                    <Button type="button" variant="outline" size="icon">
                       <UsersRound />
                     </Button>
                   </ResponsivePopoverTrigger>
@@ -310,7 +313,7 @@ export default function AttendanceClientPage({
                 </ResponsivePopover>
                 <ResponsivePopover>
                   <ResponsivePopoverTrigger asChild>
-                    <Button variant="outline" size="icon">
+                    <Button type="button" variant="outline" size="icon">
                       <MoreHorizontal />
                     </Button>
                   </ResponsivePopoverTrigger>

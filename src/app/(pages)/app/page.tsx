@@ -94,11 +94,14 @@ export default async function AppPage() {
                 s.type == pt.id &&
                 (s.status == "approved" || s.status == "auto-approved"),
             ).length,
+            pending: submissions.filter(
+              (s) => s.type == pt.id && s.status == "pending",
+            ).length,
             min: Number(
               getPointConfig().find((c) => c.id == pt.id)?.minimumPoints ?? 0,
             ),
           }))
-          .map(({ icon: Icon, label, amount, min }) => (
+          .map(({ icon: Icon, label, amount, pending, min }) => (
             <div
               key={label}
               className="bg-secondary/50 relative isolate flex h-auto items-end justify-between gap-2 overflow-clip rounded-xl !px-6 py-6 pt-32"
@@ -138,6 +141,7 @@ export default async function AppPage() {
                   {memberId ? amount : <Minus className="size-8" />}
                 </span>
                 <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                  {pending != 0 ? `(${pending} pending) ` : ""}
                   <Slash className="size-3" /> {min} required
                 </span>
               </div>
@@ -246,6 +250,42 @@ export default async function AppPage() {
             No events found
           </span>
         )}
+        <div className="bg-background/40 flex flex-col items-center justify-between gap-2 rounded-md border p-4 md:flex-row">
+          <div className="flex w-full flex-col gap-1 md:flex-1">
+            <span className="font-bold">Custom Event</span>
+            <span className={cn("text-muted-foreground text-xs")}>
+              Submit a point that is not listed above. Please use this as a last
+              resort.
+            </span>
+            <div className="mt-2 flex items-center gap-2">
+              <div
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full px-2 py-1 text-xs",
+                  `border-blue-600 bg-blue-800`,
+                )}
+              >
+                <div className={cn("size-3 rounded-full", `bg-blue-600`)} />
+                Custom Point
+              </div>
+            </div>
+          </div>
+          <div className="flex w-full items-center justify-end gap-4 md:w-auto">
+            <div className="flex flex-col items-end justify-center gap-2"></div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="h-24 w-12"
+                  href={`/app/events/submit`}
+                >
+                  <Upload className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Create a new submission request</TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
       </div>
       <h2 className="mt-4 text-xl font-bold">Submissions</h2>
       <div className="flex flex-col gap-2">

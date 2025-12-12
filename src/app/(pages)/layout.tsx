@@ -38,12 +38,7 @@ export const metadata: Metadata = {
     template: `%s | ${process.env.APPLICATION_NAME ?? "Honors Society Point Manager"}`,
   },
   description: "Blue Flame's Honors Society Point Manager",
-  icons: [
-    { rel: "icon", url: "/favicon.ico" },
-    { rel: "apple-touch-icon", url: "/favicon.ico" },
-    { rel: "icon", url: "/favicon.ico" },
-  ],
-  manifest: process.env.FAVICON_IMAGE,
+  icons: process.env.FAVICON_IMAGE,
   appleWebApp: {
     title: `${process.env.APPLICATION_NAME ?? "Honors Society Point Manager"}`,
     statusBarStyle: "black-translucent",

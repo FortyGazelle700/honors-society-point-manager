@@ -316,7 +316,7 @@ export default function EventsClientPage({
                 {event.hasQrSubmission && (
                   <ResponsivePopover>
                     <ResponsivePopoverTrigger asChild>
-                      <Button variant="outline" size="icon">
+                      <Button type="button" variant="outline" size="icon">
                         <QrCode />
                       </Button>
                     </ResponsivePopoverTrigger>
@@ -333,6 +333,7 @@ export default function EventsClientPage({
                       />
                       <div className="flex items-center justify-end gap-2 pt-4">
                         <Button
+                          type="button"
                           variant="secondary"
                           href={`/qr?value=${encodeURIComponent(qrURL.toString())}&code=${encodeURIComponent(event.verificationCode ?? "")}&label=${encodeURIComponent(event.name ?? "")}&print=true`}
                           onClick={(evt) => {
@@ -347,6 +348,7 @@ export default function EventsClientPage({
                           Print <Printer className="size-4" />
                         </Button>
                         <Button
+                          type="button"
                           href={`/qr?value=${encodeURIComponent(qrURL.toString())}&code=${encodeURIComponent(event.verificationCode ?? "")}&label=${encodeURIComponent(event.name ?? "")}`}
                           onClick={(evt) => {
                             evt.preventDefault();

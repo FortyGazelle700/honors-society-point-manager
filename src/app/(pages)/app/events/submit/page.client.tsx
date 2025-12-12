@@ -77,6 +77,7 @@ export function EventSubmissionClientPage({
     updatedAt: new Date(),
     memberId: memberId ?? "",
   });
+  const [additionalMemberIds, setAdditionalMemberIds] = useState<string[]>([]);
   const [code, setCode] = useState("");
   const [submissionType, setSubmissionType] = useState<"photo" | "qr">("photo");
   const [fileUpload, setFileUpload] = useState<File | null>(null);
@@ -265,6 +266,11 @@ export function EventSubmissionClientPage({
       </div>
       <input type="hidden" name="request" value={JSON.stringify(request)} />
       <input type="hidden" name="code" value={code} />
+      <input
+        type="hidden"
+        name="additionalMemberIds"
+        value={JSON.stringify(additionalMemberIds)}
+      />
       <input type="file" name="file" ref={fileInputRef} className="hidden" />
       <div className="flex flex-col gap-4">
         <label className="flex w-full flex-col gap-2">
@@ -299,6 +305,87 @@ export function EventSubmissionClientPage({
             className="w-full"
           />
         </label>
+        {Number(process.env.NEXT_PUBLIC_PARTICIPANT_MAX ?? "0") != 0 && (
+          <>
+            {additionalMemberIds.map((id, idx) => (
+              <label key={id} className="flex w-full flex-col gap-2">
+                <div className="flex items-center">
+                  <span className="text-muted-foreground text-sm">
+                    Participant Name
+                  </span>
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="ml-auto !p-0 text-xs text-red-500"
+                    onClick={() =>
+                      setAdditionalMemberIds((prev) =>
+                        prev.filter((_, i) => i != idx),
+                      )
+                    }
+                  >
+                    Remove Participant
+                  </Button>
+                </div>
+                <Combobox
+                  value={id}
+                  onSelect={(val) =>
+                    setAdditionalMemberIds((prev) => {
+                      const newArr = [...prev];
+                      newArr[idx] = val;
+                      return newArr;
+                    })
+                  }
+                  groups={[
+                    {
+                      header: "Members",
+                      id: "members",
+                      values: members
+                        .filter((m) => m.role != "participant")
+                        .map((m) => ({
+                          id: m.id,
+                          render: `${m.firstName} ${m.lastName}`,
+                        })),
+                    },
+                    {
+                      header: "Participants",
+                      id: "participants",
+                      values: members
+                        .filter((m) => m.role == "participant")
+                        .map((m) => ({
+                          id: m.id,
+                          render: `${m.firstName} ${m.lastName}`,
+                        })),
+                    },
+                  ]}
+                  className="w-full"
+                />
+              </label>
+            ))}
+            <label className="mb-4 flex items-center">
+              <p className="text-muted-foreground text-xs">
+                If you participated with others, and they are photographed in
+                the submission, you may add them as participants. (
+                {8 - additionalMemberIds.length} remaining)
+              </p>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="ml-auto shrink-0 text-xs"
+                onClick={() => {
+                  setAdditionalMemberIds((prev) => [...prev, ""]);
+                }}
+                disabled={
+                  additionalMemberIds.length >=
+                  Number(process.env.NEXT_PUBLIC_PARTICIPANT_MAX ?? "0")
+                }
+              >
+                Add Participant
+              </Button>
+            </label>
+          </>
+        )}
         <label className="flex w-full flex-col gap-2">
           <span className="text-muted-foreground text-sm">Event Name</span>
           <Combobox
@@ -321,6 +408,10 @@ export function EventSubmissionClientPage({
             allowCustomOption
             customOptionLabel={(opt) => `Create "${opt}"`}
             className="w-full"
+            placeholders={{
+              emptyValue: "Select an event...",
+              search: "Start typing to search or create a custom event...",
+            }}
           />
         </label>
         {!request.eventId && (
@@ -358,6 +449,7 @@ export function EventSubmissionClientPage({
           <Popover>
             <PopoverTrigger asChild>
               <Button
+                type="button"
                 variant="outline"
                 data-empty={!request.eventDate}
                 className="data-[empty=true]:text-muted-foreground h-9 flex-1 justify-start text-left font-normal"

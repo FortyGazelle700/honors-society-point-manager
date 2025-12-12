@@ -153,6 +153,7 @@ export function Combobox({
       <Drawer open={open} onOpenChange={setOpen}>
         <DrawerTrigger asChild>
           <Button
+            type="button"
             variant="outline"
             role="combobox"
             aria-expanded={open}
@@ -246,6 +247,7 @@ export function Combobox({
     <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           role="combobox"
           aria-expanded={open}

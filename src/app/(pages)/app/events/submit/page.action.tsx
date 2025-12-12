@@ -24,7 +24,6 @@ import { eventSubmissions } from "@/server/db/schema";
 import { revalidateTag } from "next/cache";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getPointConfig } from "@/lib/utils";
-import heicConvert from "heic-convert";
 import sharp from "sharp";
 
 export type Members = Awaited<ReturnType<typeof getMembers>>;
@@ -47,7 +46,33 @@ export async function action(form: FormData) {
     String(form.get("request") as string),
   ) as Submissions[number];
   const entryCode = form.get("code") as string | null;
+  const additionalMemberIdsRaw = form.get("additionalMemberIds") as
+    | string
+    | null;
   let entryFile = form.get("file") as File | null;
+
+  const additionalMemberIds = (() => {
+    if (!additionalMemberIdsRaw) return [] as string[];
+    try {
+      const parsed = JSON.parse(additionalMemberIdsRaw) as unknown;
+      if (!Array.isArray(parsed)) return [] as string[];
+      return parsed
+        .filter((id): id is string => typeof id === "string")
+        .map((id) => id.trim())
+        .filter(Boolean);
+    } catch (err) {
+      console.error("Failed to parse additionalMemberIds", err);
+      return [] as string[];
+    }
+  })();
+
+  const participantIds = Array.from(
+    new Set(
+      [entryRequest.memberId, ...additionalMemberIds].filter(
+        (id): id is string => typeof id === "string" && id.trim().length > 0,
+      ),
+    ),
+  );
 
   if (((await entryFile?.bytes()) ?? 0) == 0) {
     entryFile = null;
@@ -77,12 +102,14 @@ export async function action(form: FormData) {
     submissions.find(
       (s) =>
         s.eventId == entryRequest.eventId &&
-        s.memberId == entryRequest.memberId,
+        participantIds.includes(s.memberId),
     )
   ) {
     console.error("You have already submitted attendance for this event");
     return;
   }
+
+  let uploadLink: string | null = null;
 
   if (entryFile) {
     if (entryFile.size > 15 * 1024 * 1024) {
@@ -114,6 +141,8 @@ export async function action(form: FormData) {
 
       if (entryFile.type === "image/heic" || entryFile.type === "image/heif") {
         // Convert HEIC/HEIF -> PNG
+        const heicConvert = (await import("heic-convert")).default;
+
         pngBuffer = Buffer.from(
           await heicConvert({
             buffer: fileBuffer as unknown as ArrayBufferLike,
@@ -139,24 +168,33 @@ export async function action(form: FormData) {
         }),
       );
 
-      entryRequest.uploadLink = fileId;
+      uploadLink = fileId;
     } catch (error) {
       console.error("S3 upload failed:", error);
       throw new Error("File upload failed");
     }
   } else {
-    entryRequest.uploadLink = null;
+    uploadLink = null;
   }
 
-  await db.insert(eventSubmissions).values({
+  const now = new Date();
+  const eventDate = new Date(entryRequest.eventDate ?? event?.date ?? now);
+  const status: Submissions[number]["status"] =
+    entryCode == "" ? "pending" : "auto-approved";
+
+  const rows = participantIds.map((memberId, idx) => ({
     ...entryRequest,
-    uploadLink: entryRequest.uploadLink ?? "",
-    eventDate: new Date(entryRequest.eventDate ?? event?.date ?? new Date()),
+    id: idx === 0 ? entryRequest.id : randomUUID(),
+    memberId,
+    uploadLink: uploadLink ?? "",
+    eventDate,
     officerNotes: "",
-    status: entryCode == "" ? "pending" : "auto-approved",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
+    status,
+    createdAt: now,
+    updatedAt: now,
+  }));
+
+  await db.insert(eventSubmissions).values(rows);
 
   revalidateTag("db:events:submissions");
 }
